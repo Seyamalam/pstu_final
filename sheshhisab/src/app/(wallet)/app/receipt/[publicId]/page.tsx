@@ -6,8 +6,7 @@ export const instant = false;
 
 export const metadata: Metadata = {
   title: "Receipt",
-  description:
-    "Inspect a private SheshHisab transfer and its balanced ledger entries.",
+  description: "View private SheshHisab payment details.",
 };
 
 export default async function ReceiptPage({

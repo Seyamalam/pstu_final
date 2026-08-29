@@ -1,11 +1,13 @@
 # SheshHisab · PSTU National Hackathon
 
-SheshHisab is a closed-loop fake-BDT wallet built to make transaction correctness visible. The runnable Next.js application and full setup guide are in [`sheshhisab/`](sheshhisab/README.md).
+SheshHisab is a closed-loop BDT wallet with responsive web and Expo clients over one Convex backend. The live web app is at [sheshhisab.vercel.app](https://sheshhisab.vercel.app).
 
 - [Challenge brief](challenge.md)
 - [Hackathon rules](National_Hackathon.md)
 - [Project plan](docs/PROJECT_PLAN.md)
-- [Build checklist](docs/TODO.md)
+- [Release checklist](docs/TODO.md)
+- [Web setup](sheshhisab/README.md)
+- [Expo setup](mobile/README.md)
 
 ```bash
 cd sheshhisab
@@ -14,4 +16,4 @@ bunx convex dev
 bun dev
 ```
 
-No real money moves through this project.
+The challenge defines the balance as simulated funds; the project does not integrate real payment rails.

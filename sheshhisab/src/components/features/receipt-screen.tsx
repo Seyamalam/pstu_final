@@ -34,7 +34,7 @@ export function ReceiptScreen({ publicId }: { publicId: string }) {
       <ReceiptProof
         receiptId={receipt.publicId}
         state={balanced ? "complete" : "failed"}
-        stateLabel={balanced ? "Balanced" : "Mismatch"}
+        stateLabel={balanced ? "Completed" : "Unavailable"}
         formattedAmount={formatPoisha(receipt.amountPoisha)}
         accessibleAmount={`Transfer amount ${formatPoisha(receipt.amountPoisha)}`}
         sender={{
@@ -51,19 +51,17 @@ export function ReceiptScreen({ publicId }: { publicId: string }) {
         dateTime={new Date(receipt.createdAt).toISOString()}
         note={receipt.note ?? undefined}
         debit={{
-          label: "Debit",
+          label: "From",
           accountLabel: receipt.sender.displayName,
           formattedAmount: formatPoisha(receipt.debitAmountPoisha, "minus"),
         }}
         credit={{
-          label: "Credit",
+          label: "To",
           accountLabel: receipt.recipient.displayName,
           formattedAmount: formatPoisha(receipt.creditAmountPoisha, "plus"),
         }}
         proofLabel={
-          balanced
-            ? `Ledger difference ${formatPoisha(receipt.ledgerDifferencePoisha)}`
-            : "The ledger entries do not match. Do not treat this transfer as verified."
+          balanced ? "Payment recorded" : "We couldn't verify this receipt."
         }
         actions={
           <div className="flex flex-wrap gap-2" data-print-hidden="true">

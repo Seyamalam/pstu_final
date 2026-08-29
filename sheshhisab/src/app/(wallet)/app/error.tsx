@@ -23,11 +23,10 @@ export default function WalletError({
           <AlertTriangle aria-hidden="true" className="size-5" />
         </span>
         <h1 className="mt-5 text-2xl font-semibold tracking-[-0.035em] text-foreground">
-          This wallet view did not load.
+          Something went wrong
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          No payment is complete unless a receipt appears. Retry the view, then
-          check activity before sending again.
+          Try again or check Activity.
         </p>
         <Button size="lg" onClick={reset} className="mt-6 w-full">
           <RotateCcw aria-hidden="true" className="size-4" />

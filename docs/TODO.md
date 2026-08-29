@@ -1,5 +1,42 @@
 # SheshHisab release checklist
 
+## Current expansion pass
+
+### Functionality
+
+- [ ] Add favorite and recent recipients to web and native Send flows.
+- [ ] Add amount- and note-prefilled QR payment requests and share links.
+- [ ] Add a complete native request-money lifecycle.
+- [ ] Add notification inboxes with unread, read, and read-all states.
+- [ ] Add organization creation, switching, membership, and audit history on web.
+- [ ] Add simulated MFS, bank, and card rails on web.
+- [ ] Add organization member removal with server-side role enforcement.
+- [ ] Add scheduled transfers with cancellation and retry-safe execution.
+- [ ] Add split bills with explicit contribution and settlement states.
+- [ ] Add lightweight category budgets and progress views.
+- [ ] Add password recovery and email verification when delivery credentials are configured.
+
+### Experience and motion
+
+- [ ] Standardize hierarchical, modal, and tab transitions across both clients.
+- [ ] Add skeleton-to-content handoffs for wallet data.
+- [ ] Add restrained payment success feedback and native haptics.
+- [ ] Add clear QR detection, success, and failure feedback.
+- [ ] Add continuity when switching personal and organization wallets.
+- [ ] Polish loading, empty, offline, validation, and permission-denied states.
+- [ ] Verify dark mode, large text, keyboard safety, reduced motion, and screen readers.
+- [ ] Profile the native release build and remove motion that misses frame targets.
+
+### Release proof
+
+- [ ] Pass web lint, types, unit tests, and production build.
+- [ ] Pass native types, unit tests, Expo Doctor, and production export/build.
+- [ ] Pass Convex code generation and backend edge-case tests.
+- [ ] Capture and review every native route on an Android emulator.
+- [ ] Run the judge demo path three consecutive times without resetting data manually.
+- [ ] Record a short fallback demo.
+- [ ] Deploy Convex and Vercel production from the verified commit.
+
 ## Completed
 
 - [x] Initialize Git, add the remote, and push `main`.

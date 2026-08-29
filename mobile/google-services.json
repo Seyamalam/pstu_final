@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "324237545619",
+    "project_id": "sheshhisab-pstu-2026",
+    "storage_bucket": "sheshhisab-pstu-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324237545619:android:a39c57581d57daa4bfbd66",
+        "android_client_info": {
+          "package_name": "com.sheshhisab.wallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_OG38ZVrL2EeqWiJWLSFV6BzYhru5krg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

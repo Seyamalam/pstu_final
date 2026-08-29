@@ -5,6 +5,7 @@ import { betterAuth } from "better-auth/minimal";
 
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import { sendAuthEmail } from "./lib/email";
 
@@ -38,7 +39,7 @@ export function createAuth(ctx: GenericCtx<DataModel>) {
     },
     emailVerification: {
       sendOnSignUp: Boolean(
-        process.env.RESEND_API_KEY && process.env.AUTH_EMAIL_FROM,
+        env.AUTH_EMAIL_RELAY_URL && env.AUTH_EMAIL_RELAY_SECRET,
       ),
       expiresIn: 60 * 60,
       sendVerificationEmail: async ({ user, url }) => {

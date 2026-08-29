@@ -146,6 +146,9 @@ export default function SettingsScreen() {
       <Button variant="outline" fullWidth onPress={() => router.push('/scheduled-transfers' as never)}>
         Scheduled transfers
       </Button>
+      <Button variant="outline" fullWidth onPress={() => router.push('/budgets' as never)}>
+        Budgets
+      </Button>
       <Button variant="ghost" fullWidth onPress={signOut}>Sign out</Button>
     </Page>
   );

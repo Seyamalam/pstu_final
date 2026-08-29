@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { canManageMembers, organizationRoute, roleLabel } from '../lib/wallet-routes';
+import {
+  auditEventCopy,
+  canManageMembers,
+  canRemoveMember,
+  organizationRoute,
+  roleLabel,
+} from '../lib/wallet-routes';
 
 describe('wallet routes and permissions', () => {
   it('allows only owners and admins to manage members', () => {
@@ -16,5 +22,22 @@ describe('wallet routes and permissions', () => {
       params: { accountId: 'account-1' },
     });
     expect(roleLabel('treasurer')).toBe('Treasurer');
+  });
+
+  it('protects owners and admin peers from removal', () => {
+    expect(canRemoveMember('owner', 'admin')).toBe(true);
+    expect(canRemoveMember('admin', 'admin')).toBe(false);
+    expect(canRemoveMember('admin', 'treasurer')).toBe(true);
+    expect(canRemoveMember('owner', 'owner')).toBe(false);
+  });
+
+  it('writes compact organization audit copy', () => {
+    expect(auditEventCopy({
+      kind: 'member_role_changed',
+      actorName: 'Nadia',
+      targetName: 'Rafi',
+      fromRole: 'viewer',
+      toRole: 'treasurer',
+    })).toBe('Nadia changed Rafi from viewer to treasurer');
   });
 });

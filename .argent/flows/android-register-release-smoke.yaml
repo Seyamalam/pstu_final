@@ -1,0 +1,37 @@
+steps:
+  - echo: Restart the signed Android app. Expect the sign-in screen.
+  - launch: com.sheshhisab.wallet
+  - await:
+      visible:
+        text: Sign in
+      timeout: 20000
+  - echo: Open create account and verify the compact registration form.
+  - tap:
+      text: Create account
+  - await:
+      visible:
+        text: Your wallet handle comes next.
+      timeout: 10000
+  - type:
+      into:
+        role: TextField
+        text: Name
+      text: "{{secret:REGISTER_NAME}}"
+      submit: false
+  - type:
+      into:
+        role: TextField
+        text: Email
+      text: "{{secret:REGISTER_EMAIL}}"
+      submit: false
+  - type:
+      into:
+        role: TextField
+        text: "[password]"
+      text: "{{secret:REGISTER_PASSWORD}}"
+  - echo: Submit registration. The app must remain mounted while authentication
+      completes.
+  - await:
+      visible:
+        text: Your wallet, minus the friction.
+      timeout: 15000

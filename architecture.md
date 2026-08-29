@@ -285,7 +285,8 @@ flowchart TB
     ED[Vercel auth-email route<br/>Brevo SMTP]
     CD[Convex dev<br/>stoic-akita-240]
     CX[Convex production<br/>lovely-dolphin-835]
-    EAS[EAS / local native builds]
+    LC[Local EAS CLI build]
+    GR[GitHub Release APK]
     AND[Android / iOS devices]
 
     GH --> V
@@ -293,13 +294,41 @@ flowchart TB
     CD --> ED
     CX --> ED
     GH --> CX
-    GH --> EAS
+    GH --> LC
+    LC --> GR
     V <--> CX
-    EAS --> AND
+    GR --> AND
     AND <--> CX
 ```
 
 The deployed web app is [sheshhisab.vercel.app](https://sheshhisab.vercel.app). Web and native environments point to the same production Convex deployment so a payment made on one client appears on the other in real time. Development and production Convex deployments use the same authenticated mail-relay contract, but keep their other deployment state separate.
+
+Android release builds run locally with EAS CLI and the remote release
+keystore. The resulting signed APK is verified locally, uploaded as a GitHub
+Release asset, and linked from the README. There is no GitHub Actions build
+path.
+
+## Notification path
+
+```mermaid
+sequenceDiagram
+    participant Domain as Convex domain mutation
+    participant Inbox as Notification inbox
+    participant Delivery as Scheduled push action
+    participant Endpoint as Web Push or Expo/FCM
+    participant Client as Web PWA or Android app
+
+    Domain->>Inbox: Insert user-scoped event
+    Domain->>Delivery: Schedule delivery after commit
+    Delivery->>Inbox: Resolve active endpoints
+    Delivery->>Endpoint: Send title, body, and allowlisted route
+    Endpoint-->>Client: Display system notification
+    Client->>Inbox: Open inbox or mark read
+```
+
+Inbox state is the durable source of truth. Push is an optional delivery
+channel: permission denial, an offline device, or an expired endpoint never
+loses the in-app event.
 
 ## Testing strategy
 

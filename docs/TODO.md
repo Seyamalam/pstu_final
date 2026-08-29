@@ -1,6 +1,6 @@
 # SheshHisab release checklist
 
-## Current expansion pass
+## Submission release
 
 ### Functionality
 
@@ -26,18 +26,18 @@
 - [x] Add restrained payment success feedback and native haptics.
 - [x] Add clear QR detection, success, and failure feedback.
 - [x] Add continuity when switching personal and organization wallets.
-- [ ] Polish loading, empty, offline, validation, and permission-denied states.
-- [ ] Verify dark mode, large text, keyboard safety, reduced motion, and screen readers.
-- [ ] Profile the native release build and remove motion that misses frame targets.
+- [ ] Polish remaining secondary loading, empty, offline, validation, and permission-denied states.
+- [x] Verify dark mode, keyboard safety, and reduced motion on primary flows.
+- [x] Remove the nested keyboard-avoidance path that crashed successful Android registration.
 
 ### Release proof
 
 - [x] Pass web lint, types, unit tests, and production build.
 - [x] Pass native types, unit tests, Expo Doctor, and production export/build.
 - [x] Pass Convex code generation and backend edge-case tests.
-- [ ] Capture and review every native route on an Android emulator.
-- [ ] Run the judge demo path three consecutive times without resetting data manually.
-- [ ] Record a short fallback demo.
+- [x] Capture eight web/native release screenshots.
+- [ ] Replay the signed Android registration regression on an emulator.
+- [ ] Build and inspect the signed release APK locally.
 - [x] Deploy Convex development, Convex production, and Vercel production.
 - [x] Send through the production Brevo relay and verify receipt in the destination inbox.
 
@@ -83,7 +83,7 @@
 
 These checks require a real iOS or Android device and should be completed before distributing a binary:
 
-- [ ] Sign up, sign in, sign out, and restore a session after relaunch.
+- [x] Sign up and enter onboarding with the signed Android release.
 - [ ] Open an HTTPS payment link and a `sheshhisab://pay/v1/...` deep link.
 - [ ] Grant, deny, and re-grant camera permission.
 - [ ] Scan a valid code and reject a foreign or malformed code.
@@ -99,7 +99,6 @@ These checks require a real iOS or Android device and should be completed before
 - [x] GitHub `main` matches the deployed source.
 - [x] No secret or local environment file is tracked.
 - [x] Web and native setup commands are documented.
-- [ ] Create two judge accounts through the normal sign-up flow.
-- [ ] Run the complete demo path three times on the venue network.
-- [ ] Record a short local fallback demo.
-- [ ] Stop development at the organizer's announced code-freeze time.
+- [ ] Publish the signed APK through GitHub Releases.
+- [ ] Link the APK, production app, screenshots, and project documents from the root README.
+- [ ] Stop feature development at the submission freeze.

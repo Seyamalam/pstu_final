@@ -35,10 +35,15 @@ The experience should feel immediate and calm: short labels, clear next actions,
 - Browser print-to-PDF statements and receipts; native PDF generation and sharing.
 - Responsive bottom navigation on mobile web and native tabs in Expo.
 - Light and dark themes, reduced-motion support, app icons, favicon, and PWA metadata.
+- Personal and organization wallets with role-aware membership.
+- Simulated Bangladesh MFS, bank, and card add-money/withdrawal flows.
+- Favorites, scheduled transfers, category budgets, and split bills.
+- Web and native notification inboxes with Web Push and Expo/FCM delivery.
+- Better Auth email verification and password recovery through Brevo SMTP.
 
 ### Explicitly out of scope
 
-- Banks, cards, payment gateways, cash in or cash out, KYC, and real funds.
+- Real banks, cards, payment gateways, cash settlement, KYC, and real funds.
 - Microservices, queues, event buses, or a second application database.
 - Offline transfer completion. Success is shown only after a server commit.
 - Admin panels, refunds, disputes, fees, recurring transfers, and multi-currency support.
@@ -173,13 +178,9 @@ This is a modular monolith. Next.js and Expo own presentation and navigation. Co
 6. Create and resolve a money request.
 7. Briefly explain integer poisha, atomic mutation writes, and stable idempotency keys.
 
-## Next bets
+## Submission freeze
 
-Only pursue these after the demo path remains green:
-
-- password reset and verified email;
-- push notifications for requests and receipts;
-- saved beneficiaries and recent-recipient shortcuts;
-- native deep-link acceptance testing on signed builds;
-- accessibility audit with VoiceOver and TalkBack;
-- store builds and release channels through EAS.
+Version 1.0.0 is the submission scope. After the local signed-APK smoke flow,
+full web/native checks, production deployment verification, and GitHub Release
+upload pass, feature work stops. Any later work should begin on a post-hackathon
+branch and must not alter the submitted tag.

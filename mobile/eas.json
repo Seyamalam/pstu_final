@@ -18,6 +18,9 @@
     },
     "production": {
       "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "NODE_ENV": "production",
         "EXPO_PUBLIC_CONVEX_URL": "https://lovely-dolphin-835.convex.cloud",

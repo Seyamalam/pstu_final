@@ -109,9 +109,10 @@ AUTH_EMAIL_FROM           # verified Brevo sender
 
 Reset and verification screens are always available. Better Auth creates the short-lived action token, Convex calls the bearer-protected relay, and the relay sends through Brevo using TLS. Existing sign-ins are not gated on verification.
 
-Setting a VAPID public key alone does not enable remote notifications. The
-authenticated subscription persistence and delivery functions must also be
-connected through `src/lib/push-subscription-adapter.ts`.
+Web Push uses VAPID credentials in Convex. The PWA settings screen registers an
+authenticated browser subscription with `notifications.registerEndpoint`;
+Convex then delivers inbox events through the Web Push endpoint and revokes
+expired subscriptions.
 
 ## PWA cache policy
 

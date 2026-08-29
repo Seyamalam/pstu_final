@@ -221,6 +221,33 @@ export const unregisterEndpoint = mutation({
   },
 });
 
+export const unregisterCurrentEndpoint = mutation({
+  args: { endpoint: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx);
+    const endpointValue = args.endpoint.trim();
+    if (!endpointValue || endpointValue.length > 2_048) {
+      fail("INVALID_PUSH_ENDPOINT", "Push endpoint is invalid.");
+    }
+    const endpoint = await ctx.db
+      .query("notificationEndpoints")
+      .withIndex("by_endpoint", (q) => q.eq("endpoint", endpointValue))
+      .unique();
+    if (!endpoint || endpoint.userId !== user._id) {
+      fail("ENDPOINT_NOT_FOUND", "Push endpoint was not found.");
+    }
+    if (!endpoint.revokedAt) {
+      const revokedAt = Date.now();
+      await ctx.db.patch("notificationEndpoints", endpoint._id, {
+        revokedAt,
+        updatedAt: revokedAt,
+      });
+    }
+    return null;
+  },
+});
+
 export const listEndpoints = query({
   args: {},
   returns: v.array(endpointValidator),

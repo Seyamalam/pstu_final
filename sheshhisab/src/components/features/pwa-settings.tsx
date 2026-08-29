@@ -1,11 +1,11 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import { Bell, BellOff, Check, Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { usePwa } from "@/components/app/pwa-provider";
 import { Button } from "@/components/ui/button";
-import { pushSubscriptionAdapter } from "@/lib/push-subscription-adapter";
 import {
   decodeVapidPublicKey,
   type PushAvailability,
@@ -14,6 +14,7 @@ import {
   supportsWebPush,
   toPushSubscriptionPayload,
 } from "@/lib/pwa";
+import { api } from "../../../convex/_generated/api";
 
 function browserSupportsPush(): boolean {
   return supportsWebPush({
@@ -70,6 +71,10 @@ function SettingsRow({
 
 export function PwaSettings() {
   const { install, installState } = usePwa();
+  const registerEndpoint = useMutation(api.notifications.registerEndpoint);
+  const unregisterEndpoint = useMutation(
+    api.notifications.unregisterCurrentEndpoint,
+  );
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ?? "";
   const [supported, setSupported] = useState(false);
   const [permission, setPermission] = useState<PushPermission>("unsupported");
@@ -96,8 +101,7 @@ export function PwaSettings() {
       resolvePushAvailability({
         supported,
         permission,
-        configured:
-          Boolean(vapidPublicKey) && pushSubscriptionAdapter.configured,
+        configured: Boolean(vapidPublicKey),
         subscribed: subscription !== null,
       }),
     [permission, subscription, supported, vapidPublicKey],
@@ -119,12 +123,13 @@ export function PwaSettings() {
         applicationServerKey: decodeVapidPublicKey(vapidPublicKey),
       });
       const payload = toPushSubscriptionPayload(nextSubscription.toJSON());
-      const result = await pushSubscriptionAdapter.save(payload);
-      if (!result.ok) {
-        await nextSubscription.unsubscribe();
-        setMessage("Could not enable payment alerts.");
-        return;
-      }
+      await registerEndpoint({
+        platform: "web",
+        endpoint: payload.endpoint,
+        p256dh: payload.keys.p256dh,
+        auth: payload.keys.auth,
+        deviceLabel: navigator.platform || "Web browser",
+      });
       setSubscription(nextSubscription);
     } catch {
       setMessage("Could not enable payment alerts.");
@@ -139,13 +144,7 @@ export function PwaSettings() {
     setMessage(null);
 
     try {
-      const result = await pushSubscriptionAdapter.remove(
-        subscription.endpoint,
-      );
-      if (!result.ok) {
-        setMessage("Could not turn off payment alerts.");
-        return;
-      }
+      await unregisterEndpoint({ endpoint: subscription.endpoint });
       await subscription.unsubscribe();
       setSubscription(null);
     } catch {

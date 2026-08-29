@@ -338,13 +338,13 @@ describe("notification endpoints", () => {
     }
 
     await expectErrorCode(
-      asBob.mutation(api.notifications.unregisterEndpoint, {
-        endpointId: registered.id,
+      asBob.mutation(api.notifications.unregisterCurrentEndpoint, {
+        endpoint: "https://push.example.test/subscription/alice",
       }),
       "ENDPOINT_NOT_FOUND",
     );
-    await asAlice.mutation(api.notifications.unregisterEndpoint, {
-      endpointId: registered.id,
+    await asAlice.mutation(api.notifications.unregisterCurrentEndpoint, {
+      endpoint: "https://push.example.test/subscription/alice",
     });
     expect(await asAlice.query(api.notifications.listEndpoints, {})).toEqual(
       expect.arrayContaining([

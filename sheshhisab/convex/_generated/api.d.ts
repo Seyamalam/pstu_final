@@ -21,6 +21,7 @@ import type * as lib_email from "../lib/email.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_money from "../lib/money.js";
 import type * as lib_notifications from "../lib/notifications.js";
+import type * as lib_push from "../lib/push.js";
 import type * as lib_qr from "../lib/qr.js";
 import type * as lib_rails from "../lib/rails.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/money": typeof lib_money;
   "lib/notifications": typeof lib_notifications;
+  "lib/push": typeof lib_push;
   "lib/qr": typeof lib_qr;
   "lib/rails": typeof lib_rails;
   "lib/rateLimits": typeof lib_rateLimits;

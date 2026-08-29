@@ -38,7 +38,7 @@ export default function InboxScreen() {
       title="Notifications"
       safeTop
       action={unread ? (
-        <Button size="sm" variant="ghost" onPress={() => void markAllRead({})}>Mark all read</Button>
+        <Button size="sm" variant="ghost" onPress={() => void markAllRead({})}>Read all</Button>
       ) : null}
     >
       <View className="flex-row gap-3">

@@ -9,10 +9,20 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_CONVEX_URL": "https://lovely-dolphin-835.convex.cloud",
+        "EXPO_PUBLIC_SITE_URL": "https://sheshhisab.vercel.app"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_CONVEX_URL": "https://lovely-dolphin-835.convex.cloud",
+        "EXPO_PUBLIC_SITE_URL": "https://sheshhisab.vercel.app"
+      }
     }
   },
   "submit": {

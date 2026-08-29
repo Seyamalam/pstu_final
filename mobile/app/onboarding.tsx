@@ -84,7 +84,7 @@ export default function OnboardingScreen() {
               />
               <Text size="lg" weight="bold">SheshHisab</Text>
             </View>
-            <Text muted size="xs">{step + 1} / 2</Text>
+            <Text muted size="xs" className="mr-12">{step + 1} / 2</Text>
           </View>
 
           <View className="flex-row gap-2" accessibilityLabel={`Step ${step + 1} of 2`}>
@@ -133,6 +133,7 @@ export default function OnboardingScreen() {
                     startContent={<UserRound size={18} color={muted} />}
                     interactiveContent={false}
                     disabled={submitting}
+                    avoidKeyboard
                   />
                   <Input
                     label="Handle"
@@ -148,6 +149,7 @@ export default function OnboardingScreen() {
                     startContent={<AtSign size={18} color={muted} />}
                     interactiveContent={false}
                     disabled={submitting}
+                    avoidKeyboard
                   />
                   {error ? (
                     <View className="rounded-xl bg-destructive/10 px-3 py-2.5">

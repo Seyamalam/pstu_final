@@ -81,6 +81,7 @@ export default function SignUpScreen() {
         startContent={<UserRound size={18} color={foreground} />}
         interactiveContent={false}
         disabled={submitting}
+        avoidKeyboard
       />
       <Input
         label="Email"
@@ -95,6 +96,7 @@ export default function SignUpScreen() {
         startContent={<Mail size={18} color={foreground} />}
         interactiveContent={false}
         disabled={submitting}
+        avoidKeyboard
       />
       <Input
         label="Password"
@@ -120,6 +122,7 @@ export default function SignUpScreen() {
           </Pressable>
         )}
         disabled={submitting}
+        avoidKeyboard
       />
       {error ? (
         <View className="rounded-xl bg-destructive/10 px-3 py-2.5">

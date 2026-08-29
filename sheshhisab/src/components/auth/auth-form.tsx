@@ -10,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
@@ -384,6 +385,15 @@ export function AuthForm() {
             }
           />
         </div>
+
+        {mode === "sign-in" ? (
+          <Link
+            href="/forgot-password"
+            className="min-h-10 self-end py-2 text-sm font-semibold text-primary"
+          >
+            Forgot password?
+          </Link>
+        ) : null}
 
         <div className="pt-0.5" aria-live="polite">
           <AnimatePresence initial={false}>

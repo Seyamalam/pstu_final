@@ -8,6 +8,7 @@ import {
   QrCode,
 } from "lucide-react";
 import Link from "next/link";
+import { AuthEmailSettings } from "./auth-email-settings";
 import { PwaSettings } from "./pwa-settings";
 import { PageHeading } from "./screen-states";
 
@@ -43,6 +44,7 @@ export function MoreScreen() {
         ))}
       </section>
       <PwaSettings />
+      <AuthEmailSettings />
     </div>
   );
 }

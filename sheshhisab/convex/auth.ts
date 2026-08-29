@@ -6,6 +6,7 @@ import { betterAuth } from "better-auth/minimal";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
+import { sendAuthEmail } from "./lib/email";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -24,6 +25,31 @@ export function createAuth(ctx: GenericCtx<DataModel>) {
       requireEmailVerification: false,
       minPasswordLength: 8,
       maxPasswordLength: 128,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }) => {
+        await sendAuthEmail({
+          to: user.email,
+          subject: "Reset your SheshHisab password",
+          preview: "Reset your password",
+          actionLabel: "Reset password",
+          actionUrl: url,
+        });
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: Boolean(
+        process.env.RESEND_API_KEY && process.env.AUTH_EMAIL_FROM,
+      ),
+      expiresIn: 60 * 60,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendAuthEmail({
+          to: user.email,
+          subject: "Verify your SheshHisab email",
+          preview: "Verify your email address",
+          actionLabel: "Verify email",
+          actionUrl: url,
+        });
+      },
     },
     rateLimit: {
       enabled: true,

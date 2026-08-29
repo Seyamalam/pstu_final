@@ -10,6 +10,8 @@ const app = defineApp({
     PUSH_VAPID_PRIVATE_KEY: v.optional(v.string()),
     EXPO_ACCESS_TOKEN: v.optional(v.string()),
     RAIL_REFERENCE_PEPPER: v.optional(v.string()),
+    RESEND_API_KEY: v.optional(v.string()),
+    AUTH_EMAIL_FROM: v.optional(v.string()),
   },
 });
 

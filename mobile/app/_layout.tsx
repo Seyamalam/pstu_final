@@ -87,6 +87,9 @@ function Navigation() {
           <Stack.Screen name="scheduled-transfers" options={{ title: 'Scheduled' }} />
           <Stack.Screen name="schedule-transfer" options={{ title: 'Schedule transfer' }} />
           <Stack.Screen name="budgets" options={{ title: 'Budgets' }} />
+          <Stack.Screen name="split-bills" options={{ title: 'Split bills' }} />
+          <Stack.Screen name="create-split" options={{ title: 'New split' }} />
+          <Stack.Screen name="split/[bill-id]" options={{ title: 'Split bill' }} />
           <Stack.Screen name="receipt/[public-id]" options={{ title: 'Receipt' }} />
           <Stack.Screen name="statements" options={{ title: 'Statements' }} />
         </Stack.Protected>

@@ -24,4 +24,12 @@ describe('notificationRoute', () => {
     expect(notificationRoute({ kind: 'request', referenceId: 'request_1234' }))
       .toBe('/request/request_1234');
   });
+
+  it('opens a safe split invitation', () => {
+    expect(notificationRoute({
+      kind: 'request',
+      eventKey: 'split.invited',
+      referenceId: 'split_12345',
+    })).toBe('/split/split_12345');
+  });
 });

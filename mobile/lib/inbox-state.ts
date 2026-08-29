@@ -16,6 +16,8 @@ export function inboxCopy(eventKey: string): { title: string; detail: string } {
       return { title: 'Request declined', detail: 'The request was not paid.' };
     case 'request.cancelled':
       return { title: 'Request cancelled', detail: 'No payment was made.' };
+    case 'split.invited':
+      return { title: 'Split bill', detail: 'Review your share.' };
     case 'org.member':
       return { title: 'Organization access', detail: 'Your wallet access changed.' };
     case 'cash_in':
@@ -30,8 +32,12 @@ export function inboxCopy(eventKey: string): { title: string; detail: string } {
 export function inboxRoute(input: {
   kind: InboxKind;
   referenceId: string;
+  eventKey?: string;
 }): string {
   if (!isSafeReference(input.referenceId)) return '/(tabs)/inbox';
+  if (input.eventKey === 'split.invited') {
+    return `/split/${encodeURIComponent(input.referenceId)}`;
+  }
   if (input.kind === 'transfer') {
     return `/receipt/${encodeURIComponent(input.referenceId)}`;
   }

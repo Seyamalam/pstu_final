@@ -15,6 +15,13 @@ export function notificationRoute(data: NotificationData): string {
     case 'money_request':
     case 'request': {
       const referenceId = data.referenceId;
+      if (
+        data.eventKey === 'split.invited'
+        && typeof referenceId === 'string'
+        && REFERENCE_ID_PATTERN.test(referenceId)
+      ) {
+        return `/split/${encodeURIComponent(referenceId)}`;
+      }
       return typeof referenceId === 'string' && REFERENCE_ID_PATTERN.test(referenceId)
         ? `/request/${encodeURIComponent(referenceId)}`
         : '/(tabs)/inbox';

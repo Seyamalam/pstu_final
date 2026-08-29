@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react-native';
 import { Button } from 'panelui-native/components/button';
 import { Input } from 'panelui-native/components/input';
@@ -36,7 +36,6 @@ export default function SignInScreen() {
       setError('Email or password is incorrect.');
       return;
     }
-    router.replace('/');
   }
 
   return (

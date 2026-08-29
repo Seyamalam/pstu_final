@@ -1,4 +1,5 @@
 const RECEIPT_ID_PATTERN = /^[a-zA-Z0-9_-]{8,128}$/;
+const REFERENCE_ID_PATTERN = /^[a-zA-Z0-9_-]{8,128}$/;
 
 type NotificationData = Record<string, unknown> | null | undefined;
 
@@ -12,11 +13,19 @@ export function notificationRoute(data: NotificationData): string {
 
   switch (data.kind) {
     case 'money_request':
-      return '/(tabs)/home';
+    case 'request': {
+      const referenceId = data.referenceId;
+      return typeof referenceId === 'string' && REFERENCE_ID_PATTERN.test(referenceId)
+        ? `/request/${encodeURIComponent(referenceId)}`
+        : '/(tabs)/inbox';
+    }
     case 'transfer':
     case 'rail_transfer':
+    case 'rail':
       return '/(tabs)/activity';
-    default:
+    case 'member':
       return '/(tabs)/home';
+    default:
+      return '/(tabs)/inbox';
   }
 }

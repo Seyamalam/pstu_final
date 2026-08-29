@@ -1,11 +1,13 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from 'convex/react';
+import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { Button } from 'panelui-native/components/button';
 import { Card } from 'panelui-native/components/card';
 import { Text } from 'panelui-native/primitives/text';
 
 import { ActivityRow } from '@/components/activity-row';
+import { ContentHandoff } from '@/components/content-handoff';
 import { LoadingState } from '@/components/loading-state';
 import { MessageCard } from '@/components/message-card';
 import { Page } from '@/components/page';
@@ -29,14 +31,20 @@ export default function HomeScreen() {
 
   return (
     <Page title={dashboard.user.displayName} safeTop>
+      <ContentHandoff>
       <WalletSwitcher wallets={wallets} />
 
       <Card className="overflow-hidden border-primary/20 bg-primary">
         <Card.Header>
           <Text size="sm" className="text-primary-foreground/80">Available</Text>
-          <Text size="3xl" weight="bold" className="text-primary-foreground">
-            {formatMoney(active.balancePoisha)}
-          </Text>
+          <Animated.View
+            key={active.accountId}
+            entering={FadeIn.duration(120).reduceMotion(ReduceMotion.System)}
+          >
+            <Text size="3xl" weight="bold" className="text-primary-foreground">
+              {formatMoney(active.balancePoisha)}
+            </Text>
+          </Animated.View>
           <Text size="sm" className="text-primary-foreground/80">
             {active.kind === 'personal' ? `@${dashboard.user.handle}` : roleLabel(active.role)}
           </Text>
@@ -129,6 +137,7 @@ export default function HomeScreen() {
           <MessageCard title="No activity yet" />
         )}
       </View> : null}
+      </ContentHandoff>
     </Page>
   );
 }

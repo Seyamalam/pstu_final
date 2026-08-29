@@ -21,11 +21,13 @@ import {
 } from '@/lib/payment-intent';
 
 export default function SendScreen() {
-  const params = useLocalSearchParams<{ recipient?: string }>();
+  const params = useLocalSearchParams<{ recipient?: string; amount?: string; note?: string }>();
   const initialRecipient = typeof params.recipient === 'string' ? params.recipient : '';
+  const initialAmount = typeof params.amount === 'string' ? params.amount : '';
+  const initialNote = typeof params.note === 'string' ? params.note : '';
   const [recipient, setRecipient] = useState(initialRecipient);
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
+  const [amount, setAmount] = useState(initialAmount);
+  const [note, setNote] = useState(initialNote);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const intentRef = useRef<PaymentIntent | null>(null);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
 import { Button } from 'panelui-native/components/button';
@@ -11,7 +12,8 @@ import { MessageCard } from '@/components/message-card';
 import { Page } from '@/components/page';
 import { api } from '@/lib/convex-api';
 import { SITE_URL } from '@/lib/config';
-import { parsePayeeCode } from '@/lib/qr';
+import { poishaToTakaInput } from '@/lib/format';
+import { parsePaymentCode } from '@/lib/qr';
 
 export default function ScanScreen() {
   const convex = useConvex();
@@ -23,7 +25,7 @@ export default function ScanScreen() {
 
   async function scanned({ data }: BarcodeScanningResult) {
     if (locked) return;
-    const code = parsePayeeCode(data, [SITE_URL]);
+    const code = parsePaymentCode(data, [SITE_URL]);
     if (!code) {
       setError('Invalid payment code.');
       return;
@@ -32,9 +34,17 @@ export default function ScanScreen() {
     setError(null);
     try {
       const resolved = await convex.query(api.qr.resolvePayee, {
-        payload: code.canonicalPayload,
+        payload: code.payeePayload,
       });
-      router.push({ pathname: '/send', params: { recipient: resolved.payee.handle } });
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.push({
+        pathname: '/send',
+        params: {
+          recipient: resolved.payee.handle,
+          ...(code.amountPoisha ? { amount: poishaToTakaInput(code.amountPoisha) } : {}),
+          ...(code.note ? { note: code.note } : {}),
+        },
+      });
     } catch {
       setError('Payment code unavailable.');
       setLocked(false);
@@ -67,6 +77,9 @@ export default function ScanScreen() {
               <QRCode.Canvas />
               <QRCode.Caption>@{mine.payee.handle}</QRCode.Caption>
             </QRCode>
+            <Button size="sm" variant="outline" onPress={() => router.push('/request-code' as never)}>
+              Request QR
+            </Button>
           </View>
         ) : (
           <MessageCard title="Loading code" />

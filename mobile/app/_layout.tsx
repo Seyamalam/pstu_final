@@ -81,6 +81,9 @@ function Navigation() {
           <Stack.Screen name="withdraw" options={{ title: 'Withdraw' }} />
           <Stack.Screen name="create-organization" options={{ title: 'New organization' }} />
           <Stack.Screen name="organization-members" options={{ title: 'Members' }} />
+          <Stack.Screen name="request-money" options={{ title: 'Request money' }} />
+          <Stack.Screen name="request-code" options={{ title: 'Request QR' }} />
+          <Stack.Screen name="request/[request-id]" options={{ title: 'Request' }} />
           <Stack.Screen name="receipt/[public-id]" options={{ title: 'Receipt' }} />
           <Stack.Screen name="statements" options={{ title: 'Statements' }} />
         </Stack.Protected>

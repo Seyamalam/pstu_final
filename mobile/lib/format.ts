@@ -26,3 +26,10 @@ export function parseTakaToPoisha(value: string): bigint | null {
   return amount > 0n ? amount : null;
 }
 
+export function poishaToTakaInput(amountPoisha: bigint): string {
+  const taka = amountPoisha / 100n;
+  const poisha = amountPoisha % 100n;
+  return poisha === 0n
+    ? taka.toString()
+    : `${taka}.${poisha.toString().padStart(2, '0').replace(/0$/, '')}`;
+}

@@ -10,13 +10,18 @@ describe('notificationRoute', () => {
   });
 
   it('rejects route injection through receipt data', () => {
-    expect(notificationRoute({ receiptId: '../settings?admin=1' })).toBe('/(tabs)/home');
+    expect(notificationRoute({ receiptId: '../settings?admin=1' })).toBe('/(tabs)/inbox');
   });
 
   it('routes known activity without accepting arbitrary paths', () => {
     expect(notificationRoute({ kind: 'rail_transfer', route: 'https://example.com' })).toBe(
       '/(tabs)/activity',
     );
-    expect(notificationRoute({ route: '/settings' })).toBe('/(tabs)/home');
+    expect(notificationRoute({ route: '/settings' })).toBe('/(tabs)/inbox');
+  });
+
+  it('opens a safe request reference', () => {
+    expect(notificationRoute({ kind: 'request', referenceId: 'request_1234' }))
+      .toBe('/request/request_1234');
   });
 });

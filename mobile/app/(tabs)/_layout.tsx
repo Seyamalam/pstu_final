@@ -17,6 +17,10 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf="qrcode.viewfinder" md="qr_code_scanner" />
         <NativeTabs.Trigger.Label>Scan</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="inbox">
+        <NativeTabs.Trigger.Icon sf={{ default: 'bell', selected: 'bell.fill' }} md="notifications" />
+        <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Icon sf="gearshape" md="settings" />
         <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
@@ -24,4 +28,3 @@ export default function TabLayout() {
     </NativeTabs>
   );
 }
-

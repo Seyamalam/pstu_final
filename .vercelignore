@@ -1,0 +1,12 @@
+.git
+.agents
+.claude
+.codex
+.opencode
+.vscode
+.zed
+mobile
+sheshhisab/.next
+sheshhisab/node_modules
+sheshhisab/.vercel
+**/*.log

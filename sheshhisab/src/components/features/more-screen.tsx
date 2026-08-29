@@ -1,11 +1,14 @@
 import {
   Bell,
   Building2,
+  CalendarClock,
   ChevronRight,
   FileChartColumn,
   HandCoins,
   Landmark,
+  PiggyBank,
   QrCode,
+  Split,
 } from "lucide-react";
 import Link from "next/link";
 import { AuthEmailSettings } from "./auth-email-settings";
@@ -16,6 +19,9 @@ const actions = [
   { href: "/app/request", label: "Request money", icon: HandCoins },
   { href: "/app/money", label: "Add or withdraw", icon: Landmark },
   { href: "/app/wallets", label: "Wallets and members", icon: Building2 },
+  { href: "/app/schedules", label: "Scheduled transfers", icon: CalendarClock },
+  { href: "/app/budgets", label: "Budgets", icon: PiggyBank },
+  { href: "/app/splits", label: "Split bills", icon: Split },
   { href: "/app/notifications", label: "Alerts", icon: Bell },
   { href: "/app/statements", label: "Statements", icon: FileChartColumn },
   { href: "/app/scan", label: "My payment QR", icon: QrCode },

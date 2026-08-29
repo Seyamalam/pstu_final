@@ -5,14 +5,17 @@ import {
   Building2,
   Check,
   Crown,
+  History,
   Plus,
   ShieldCheck,
+  Trash2,
   UserRound,
   UsersRound,
   WalletCards,
 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 
+import { Button } from "@/components/motion/button/base";
 import {
   type ButtonState,
   StatefulButton,
@@ -20,7 +23,7 @@ import {
 import { Input } from "@/components/motion/input";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
-import { errorMessage, formatPoisha, initials } from "./money";
+import { errorMessage, formatPoisha, formatTimestamp, initials } from "./money";
 import { InlineError, PageHeading, ScreenLoading } from "./screen-states";
 
 const SLUG_PATTERN = /^[a-z0-9_]{3,32}$/;
@@ -30,12 +33,19 @@ export function WalletsScreen() {
   const createOrganization = useMutation(api.wallets.createOrganization);
   const switchContext = useMutation(api.wallets.switchContext);
   const addMember = useMutation(api.wallets.addMember);
+  const removeMember = useMutation(api.wallets.removeMember);
   const active = wallets?.contexts.find(
     (context) => context.accountId === wallets.activeAccountId,
   );
   const members = useQuery(
     api.wallets.listMembers,
     active?.kind === "organization" ? { accountId: active.accountId } : "skip",
+  );
+  const audit = useQuery(
+    api.wallets.listAudit,
+    active?.kind === "organization"
+      ? { accountId: active.accountId, limit: 30 }
+      : "skip",
   );
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -44,6 +54,8 @@ export function WalletsScreen() {
   const [createState, setCreateState] = useState<ButtonState>("idle");
   const [memberState, setMemberState] = useState<ButtonState>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [removeReady, setRemoveReady] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   if (!wallets || !active) return <ScreenLoading label="Loading wallets" />;
 
@@ -102,6 +114,41 @@ export function WalletsScreen() {
     active.kind === "organization" &&
     (active.role === "owner" || active.role === "admin");
 
+  const remove = async (member: NonNullable<typeof members>[number]) => {
+    if (active.kind !== "organization") return;
+    if (removeReady !== member.membershipId) {
+      setRemoveReady(member.membershipId);
+      return;
+    }
+    setRemovingId(member.membershipId);
+    setMessage(null);
+    try {
+      await removeMember({
+        accountId: active.accountId,
+        membershipId: member.membershipId,
+      });
+      setRemoveReady(null);
+    } catch (error) {
+      setMessage(errorMessage(error, "Could not remove this member."));
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const auditLabel = (event: NonNullable<typeof audit>[number]) => {
+    const target = event.target?.displayName ?? "Member";
+    if (event.kind === "organization_created") {
+      return `${event.actor.displayName} created the organization`;
+    }
+    if (event.kind === "member_added") {
+      return `${event.actor.displayName} added ${target} as ${event.toRole}`;
+    }
+    if (event.kind === "member_role_changed") {
+      return `${event.actor.displayName} changed ${target} from ${event.fromRole} to ${event.toRole}`;
+    }
+    return `${event.actor.displayName} removed ${target}`;
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <PageHeading eyebrow="Wallets" title="Personal and organization" />
@@ -119,9 +166,10 @@ export function WalletsScreen() {
                 <button
                   key={context.accountId}
                   type="button"
-                  onClick={() =>
-                    void switchContext({ accountId: context.accountId })
-                  }
+                  onClick={() => {
+                    setRemoveReady(null);
+                    void switchContext({ accountId: context.accountId });
+                  }}
                   className={cn(
                     "relative flex min-h-32 flex-col items-start rounded-[1.5rem] p-4 text-left outline-none transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:active:scale-100",
                     selected
@@ -283,9 +331,77 @@ export function WalletsScreen() {
                     )}
                     {member.role}
                   </span>
+                  {canManage &&
+                  member.role !== "owner" &&
+                  (active.role === "owner" || member.role !== "admin") ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      aria-label={
+                        removeReady === member.membershipId
+                          ? `Confirm removing ${member.user.displayName}`
+                          : `Remove ${member.user.displayName}`
+                      }
+                      title={
+                        removeReady === member.membershipId
+                          ? "Confirm removal"
+                          : "Remove member"
+                      }
+                      disabled={removingId === member.membershipId}
+                      onClick={() => void remove(member)}
+                      className={cn(
+                        "shrink-0",
+                        removeReady === member.membershipId &&
+                          "text-destructive",
+                      )}
+                    >
+                      <Trash2 aria-hidden="true" className="size-3.5" />
+                      <span className="hidden sm:inline">
+                        {removingId === member.membershipId
+                          ? "Removing"
+                          : removeReady === member.membershipId
+                            ? "Confirm"
+                            : "Remove"}
+                      </span>
+                    </Button>
+                  ) : null}
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+      ) : null}
+
+      {active.kind === "organization" ? (
+        <section className="overflow-hidden rounded-[1.5rem] bg-card ring-1 ring-foreground/10">
+          <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-5">
+            <h2 className="text-sm font-semibold">Wallet history</h2>
+            <History aria-hidden="true" className="size-5 text-primary" />
+          </header>
+          {audit === undefined ? (
+            <div className="h-28 animate-pulse bg-muted/45 motion-reduce:animate-none" />
+          ) : audit.length === 0 ? (
+            <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+              No wallet changes
+            </p>
+          ) : (
+            <ol className="divide-y divide-border">
+              {audit.map((event) => (
+                <li key={event.id} className="flex gap-3 px-4 py-3 sm:px-5">
+                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm">{auditLabel(event)}</span>
+                    <time
+                      dateTime={new Date(event.createdAt).toISOString()}
+                      className="mt-1 block font-mono text-[10px] text-muted-foreground"
+                    >
+                      {formatTimestamp(event.createdAt)}
+                    </time>
+                  </span>
+                </li>
+              ))}
+            </ol>
           )}
         </section>
       ) : null}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { ResetPasswordForm } from "@/components/auth/password-recovery-form";
@@ -10,6 +11,7 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
+  await connection();
   const { token } = await searchParams;
   return (
     <AuthPageShell>

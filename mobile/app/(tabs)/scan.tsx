@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
+import * as Network from 'expo-network';
 import { router } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
 import { Button } from 'panelui-native/components/button';
@@ -11,6 +12,7 @@ import { Text } from 'panelui-native/primitives/text';
 import { MessageCard } from '@/components/message-card';
 import { Page } from '@/components/page';
 import { api } from '@/lib/convex-api';
+import { cameraRecoveryAction, isOffline } from '@/lib/auth-recovery-state';
 import { SITE_URL } from '@/lib/config';
 import { poishaToTakaInput } from '@/lib/format';
 import { parsePaymentCode } from '@/lib/qr';
@@ -19,6 +21,7 @@ export default function ScanScreen() {
   const convex = useConvex();
   const mine = useQuery(api.qr.mine, {});
   const [permission, requestPermission] = useCameraPermissions();
+  const network = Network.useNetworkState();
   const [mode, setMode] = useState<'scan' | 'mine'>('scan');
   const [locked, setLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,11 @@ export default function ScanScreen() {
     }
     setLocked(true);
     setError(null);
+    if (isOffline(network)) {
+      setError("You're offline. Reconnect and scan again.");
+      setLocked(false);
+      return;
+    }
     try {
       const resolved = await convex.query(api.qr.resolvePayee, {
         payload: code.payeePayload,
@@ -50,6 +58,8 @@ export default function ScanScreen() {
       setLocked(false);
     }
   }
+
+  const recoveryAction = cameraRecoveryAction(permission);
 
   return (
     <Page title="Scan" safeTop>
@@ -84,10 +94,12 @@ export default function ScanScreen() {
         ) : (
           <MessageCard title="Loading code" />
         )
-      ) : !permission ? (
+      ) : recoveryAction === 'checking' ? (
         <MessageCard title="Checking camera" />
-      ) : !permission.granted ? (
+      ) : recoveryAction === 'request' ? (
         <MessageCard title="Camera access" detail="Allow camera access to scan a payment code." />
+      ) : recoveryAction === 'settings' ? (
+        <MessageCard title="Camera access" detail="Enable camera access in Settings." />
       ) : (
         <View className="overflow-hidden rounded-2xl border border-border bg-card" style={{ aspectRatio: 0.82 }}>
           <CameraView
@@ -98,8 +110,13 @@ export default function ScanScreen() {
         </View>
       )}
 
-      {mode === 'scan' && permission && !permission.granted ? (
+      {mode === 'scan' && recoveryAction === 'request' ? (
         <Button fullWidth onPress={requestPermission}>Allow camera</Button>
+      ) : null}
+      {mode === 'scan' && recoveryAction === 'settings' ? (
+        <Button fullWidth variant="outline" onPress={() => Linking.openSettings()}>
+          Open Settings
+        </Button>
       ) : null}
       {error ? (
         <View className="gap-2">

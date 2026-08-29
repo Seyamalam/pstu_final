@@ -1,5 +1,6 @@
 import { useMutation } from 'convex/react';
 import * as Device from 'expo-device';
+import * as Network from 'expo-network';
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { router } from 'expo-router';
@@ -13,6 +14,7 @@ import { useThemeMode } from 'panelui-native/theme';
 
 import { Page } from '@/components/page';
 import { authClient } from '@/lib/auth-client';
+import { isOffline, shouldOfferEmailVerification } from '@/lib/auth-recovery-state';
 import {
   getBiometricPaymentsEnabled,
   setBiometricPaymentsEnabled,
@@ -26,11 +28,14 @@ import {
 
 export default function SettingsScreen() {
   const { mode, toggleMode } = useThemeMode();
+  const { data: session } = authClient.useSession();
+  const network = Network.useNetworkState();
   const [biometrics, setBiometrics] = useState(false);
   const [biometricError, setBiometricError] = useState<string | null>(null);
   const [alerts, setAlerts] = useState(false);
   const [alertsBusy, setAlertsBusy] = useState(false);
   const [alertsMessage, setAlertsMessage] = useState<string | null>(null);
+  const [verificationState, setVerificationState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const registerEndpoint = useMutation(api.notifications.registerEndpoint);
   const unregisterEndpoint = useMutation(api.notifications.unregisterEndpoint);
 
@@ -96,8 +101,55 @@ export default function SettingsScreen() {
     router.replace('/sign-in');
   }
 
+  async function sendVerificationEmail() {
+    if (!shouldOfferEmailVerification(session?.user) || verificationState === 'sending') return;
+    if (isOffline(network)) {
+      setVerificationState('error');
+      return;
+    }
+    setVerificationState('sending');
+    try {
+      const result = await authClient.sendVerificationEmail({
+        email: session!.user.email,
+      });
+      setVerificationState(result.error ? 'error' : 'sent');
+    } catch {
+      setVerificationState('error');
+    }
+  }
+
   return (
     <Page title="Settings" safeTop>
+      {shouldOfferEmailVerification(session?.user) ? (
+        <Card className="overflow-hidden">
+          <Item>
+            <Item.Content>
+              <Item.Title>Verify email</Item.Title>
+              <Item.Description>
+                {verificationState === 'sent'
+                  ? 'Verification email sent.'
+                  : verificationState === 'error'
+                    ? isOffline(network)
+                      ? 'Reconnect to send the email.'
+                      : 'Verification email is unavailable.'
+                    : session!.user.email}
+              </Item.Description>
+            </Item.Content>
+            <Item.Actions>
+              <Button
+                className="min-h-11"
+                size="sm"
+                variant="outline"
+                loading={verificationState === 'sending'}
+                disabled={verificationState === 'sent'}
+                onPress={sendVerificationEmail}
+              >
+                {verificationState === 'sent' ? 'Sent' : 'Verify'}
+              </Button>
+            </Item.Actions>
+          </Item>
+        </Card>
+      ) : null}
       <Card className="overflow-hidden">
         <Item>
           <Item.Content>

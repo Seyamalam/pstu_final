@@ -99,6 +99,11 @@ export default function SignInScreen() {
         disabled={submitting}
         avoidKeyboard
       />
+      <Link href={'/forgot-password' as never} asChild>
+        <Button className="min-h-11 self-end" size="sm" variant="ghost">
+          Forgot password?
+        </Button>
+      </Link>
       {error ? (
         <View className="rounded-xl bg-destructive/10 px-3 py-2.5">
           <Text className="text-destructive" size="sm">{error}</Text>

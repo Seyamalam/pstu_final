@@ -72,6 +72,7 @@ function Navigation() {
         <Stack.Protected guard={!isAuthenticated}>
           <Stack.Screen name="sign-in" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="sign-up" options={{ headerShown: false, animation: 'fade_from_bottom' }} />
+          <Stack.Screen name="forgot-password" options={{ headerShown: false, animation: 'fade' }} />
         </Stack.Protected>
         <Stack.Protected guard={isAuthenticated}>
           <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />

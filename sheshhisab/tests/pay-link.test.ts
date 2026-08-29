@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { createPayLink, parsePayLink } from "../src/lib/pay-link";
+import {
+  createPayLink,
+  parsePayIntent,
+  parsePayLink,
+  poishaToInput,
+} from "../src/lib/pay-link";
 
 const origin = "https://wallet.example";
 
@@ -28,5 +33,38 @@ describe("pay links", () => {
     ];
     for (const value of invalid)
       assert.equal(parsePayLink(value, origin), null);
+  });
+
+  it("round trips an amount and note without floating point money", () => {
+    const link = createPayLink(origin, "alice_7", {
+      amountPoisha: 12_345n,
+      note: "Club dues",
+    });
+
+    assert.deepEqual(parsePayIntent(link, origin), {
+      handle: "alice_7",
+      amountPoisha: 12_345n,
+      note: "Club dues",
+    });
+    assert.equal(poishaToInput(12_345n), "123.45");
+  });
+
+  it("rejects duplicate, oversized, zero, and control-character fields", () => {
+    const invalid = [
+      `${origin}/pay/alice_7?v=1&a=1&a=2`,
+      `${origin}/pay/alice_7?v=1&a=0`,
+      `${origin}/pay/alice_7?v=1&a=10000000001`,
+      `${origin}/pay/alice_7?v=1&n=${encodeURIComponent("bad\nvalue")}`,
+      `${origin}/pay/alice_7?v=1&n=${"a".repeat(121)}`,
+    ];
+    for (const value of invalid) {
+      assert.equal(parsePayIntent(value, origin), null);
+    }
+  });
+
+  it("rejects unsafe creation inputs", () => {
+    assert.throws(() => createPayLink(origin, "alice_7", { amountPoisha: 0n }));
+    assert.throws(() => createPayLink(origin, "alice_7", { note: " padded " }));
+    assert.throws(() => createPayLink("http://evil.example", "alice_7"));
   });
 });

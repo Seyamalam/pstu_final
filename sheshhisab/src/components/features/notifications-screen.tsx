@@ -69,6 +69,7 @@ function notificationDetails(notification: Notification) {
 export function NotificationsScreen() {
   const notifications = useQuery(api.notifications.list, { limit: 50 });
   const markRead = useMutation(api.notifications.markRead);
+  const markAllRead = useMutation(api.notifications.markAllRead);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -82,9 +83,7 @@ export function NotificationsScreen() {
     setBusy(true);
     setMessage(null);
     try {
-      await Promise.all(
-        unread.map((item) => markRead({ notificationId: item.id })),
-      );
+      await markAllRead({});
     } catch (error) {
       setMessage(errorMessage(error, "Could not mark alerts as read."));
     } finally {

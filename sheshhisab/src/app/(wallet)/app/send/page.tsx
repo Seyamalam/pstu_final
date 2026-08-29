@@ -15,5 +15,14 @@ export default async function SendPage({
   const params = await searchParams;
   const initialHandle =
     typeof params.to === "string" ? params.to.trim().toLowerCase() : "";
-  return <SendFlow initialHandle={initialHandle} />;
+  const initialAmount =
+    typeof params.amount === "string" ? params.amount.trim() : "";
+  const initialNote = typeof params.note === "string" ? params.note : "";
+  return (
+    <SendFlow
+      initialHandle={initialHandle}
+      initialAmount={initialAmount}
+      initialNote={initialNote}
+    />
+  );
 }

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { ArrowLeft, CheckCircle2, ReceiptText, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ReceiptText, Send, Star } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useRef, useState } from "react";
 import { Button } from "@/components/motion/button/base";
@@ -11,28 +11,42 @@ import {
   StatefulButton,
 } from "@/components/motion/button/stateful";
 import { Input } from "@/components/motion/input";
+import { recipientShortcutGroups } from "@/lib/recipient-shortcuts";
+import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 
 import { errorMessage, formatPoisha, parseBdtInput } from "./money";
 import { PersonPicker, type PersonSummary } from "./person-picker";
+import { RecipientShortcuts } from "./recipient-shortcuts";
 import { InlineError, PageHeading, ScreenLoading } from "./screen-states";
 
 type Receipt = FunctionReturnType<typeof api.transfers.send>;
 type SendStep = "details" | "review" | "success";
 
-export function SendFlow({ initialHandle = "" }: { initialHandle?: string }) {
-  const viewer = useQuery(api.viewer.get, {});
+export function SendFlow({
+  initialHandle = "",
+  initialAmount = "",
+  initialNote = "",
+}: {
+  initialHandle?: string;
+  initialAmount?: string;
+  initialNote?: string;
+}) {
+  const viewer = useQuery(api.dashboard.get, {});
+  const favoriteRows = useQuery(api.favorites.list, { limit: 20 });
   const sendMoney = useMutation(api.transfers.send);
+  const toggleFavorite = useMutation(api.favorites.toggle);
   const intentKeyRef = useRef<string | null>(null);
   const [step, setStep] = useState<SendStep>("details");
   const [recipientQuery, setRecipientQuery] = useState(initialHandle);
   const [recipient, setRecipient] = useState<PersonSummary | null>(null);
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState(initialAmount);
+  const [note, setNote] = useState(initialNote.slice(0, 120));
   const [touched, setTouched] = useState(false);
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [favoritePending, setFavoritePending] = useState<string | null>(null);
 
   if (viewer === undefined || viewer === null) {
     return <ScreenLoading label="Preparing send money" />;
@@ -50,6 +64,32 @@ export function SendFlow({ initialHandle = "" }: { initialHandle?: string }) {
     touched && !recipient
       ? "Choose a person from the search results."
       : undefined;
+  const shortcutGroups = recipientShortcutGroups({
+    favorites: favoriteRows?.map((row) => row.recipient) ?? [],
+    recent: viewer.recentActivity.map((item) => item.counterparty),
+  });
+  const favoriteHandles = new Set(
+    favoriteRows?.map((row) => row.recipient.handle) ?? [],
+  );
+
+  const chooseRecipient = (person: PersonSummary) => {
+    setRecipient(person);
+    setRecipientQuery(person.handle);
+    setMessage(null);
+  };
+
+  const favoriteRecipient = async (person: PersonSummary) => {
+    if (favoritePending) return;
+    setFavoritePending(person.handle);
+    setMessage(null);
+    try {
+      await toggleFavorite({ recipientHandle: person.handle });
+    } catch (error) {
+      setMessage(errorMessage(error, "Could not update favorites."));
+    } finally {
+      setFavoritePending(null);
+    }
+  };
 
   const review = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -237,14 +277,39 @@ export function SendFlow({ initialHandle = "" }: { initialHandle?: string }) {
             setMessage(null);
           }}
           selected={recipient}
-          onSelect={(person) => {
-            setRecipient(person);
-            setRecipientQuery(person.handle);
-            setMessage(null);
-          }}
+          onSelect={chooseRecipient}
           label="Recipient handle"
           error={recipientError}
+          autoSelectExact={Boolean(initialHandle)}
         />
+        {!recipient ? (
+          <RecipientShortcuts
+            favorites={shortcutGroups.favorites}
+            recent={shortcutGroups.recent}
+            onSelect={chooseRecipient}
+            onToggleFavorite={(person) => void favoriteRecipient(person)}
+            pendingHandle={favoritePending}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => void favoriteRecipient(recipient)}
+            disabled={favoritePending === recipient.handle}
+            className="flex min-h-11 items-center justify-center gap-2 self-start rounded-xl px-3 text-xs font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          >
+            <Star
+              aria-hidden="true"
+              className={cn(
+                "size-3.5",
+                favoriteHandles.has(recipient.handle) &&
+                  "fill-[var(--chart-5)] text-[var(--chart-5)]",
+              )}
+            />
+            {favoriteHandles.has(recipient.handle)
+              ? "Remove favorite"
+              : "Add favorite"}
+          </button>
+        )}
         <Input
           label="Amount in BDT"
           value={amount}

@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { AtSign, Search, UserRound } from "lucide-react";
+import { useEffect } from "react";
 import { Input } from "@/components/motion/input";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
@@ -20,6 +21,7 @@ export interface PersonPickerProps {
   placeholder?: string;
   disabled?: boolean;
   error?: string;
+  autoSelectExact?: boolean;
 }
 
 export function PersonPicker({
@@ -31,6 +33,7 @@ export function PersonPicker({
   placeholder = "Search by handle",
   disabled = false,
   error,
+  autoSelectExact = false,
 }: PersonPickerProps) {
   const normalized = normalizeHandleInput(query);
   const searchable = canSearchHandle(query);
@@ -39,6 +42,12 @@ export function PersonPicker({
     searchable ? { handlePrefix: normalized } : "skip",
   );
   const showResults = searchable && !selected;
+
+  useEffect(() => {
+    if (!autoSelectExact || selected || !results) return;
+    const exact = results.find((person) => person.handle === normalized);
+    if (exact) onSelect(exact);
+  }, [autoSelectExact, normalized, onSelect, results, selected]);
 
   return (
     <div className="flex flex-col gap-2">

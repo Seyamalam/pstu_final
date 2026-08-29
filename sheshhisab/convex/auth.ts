@@ -1,3 +1,4 @@
+import { expo } from "@better-auth/expo";
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
@@ -34,7 +35,11 @@ export function createAuth(ctx: GenericCtx<DataModel>) {
         "/sign-up/email": { window: 60, max: 4 },
       },
     },
-    plugins: [convex({ authConfig })],
-    trustedOrigins: [siteUrl],
+    plugins: [expo(), convex({ authConfig })],
+    trustedOrigins: [
+      siteUrl,
+      "sheshhisab://",
+      ...(process.env.NODE_ENV === "development" ? ["exp://*"] : []),
+    ],
   });
 }

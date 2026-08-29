@@ -4,6 +4,7 @@ import { requireCurrentUser } from "./lib/auth";
 import { fail } from "./lib/errors";
 import { receiptForTransfer } from "./lib/transfers";
 import { receiptValidator } from "./lib/validators";
+import { getMembership } from "./lib/wallets";
 
 export const getByPublicId = query({
   args: { publicId: v.string() },
@@ -20,9 +21,13 @@ export const getByPublicId = query({
     if (!transfer) {
       fail("RECEIPT_NOT_FOUND", "Receipt was not found.");
     }
+    const organizationMembership = transfer.senderAccountId
+      ? await getMembership(ctx, transfer.senderAccountId, viewer._id)
+      : null;
     if (
       transfer.senderId !== viewer._id &&
-      transfer.recipientId !== viewer._id
+      transfer.recipientId !== viewer._id &&
+      !organizationMembership
     ) {
       fail("RECEIPT_NOT_FOUND", "Receipt was not found.");
     }

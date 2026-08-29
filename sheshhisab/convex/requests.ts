@@ -8,6 +8,7 @@ import {
   normalizeIdempotencyKey,
   normalizeNote,
 } from "./lib/money";
+import { createInboxNotification } from "./lib/notifications";
 import { limitRequestCreation, limitTransfer } from "./lib/rateLimits";
 import { assertRequestTransition } from "./lib/requestState";
 import { requestItem } from "./lib/requests";
@@ -17,6 +18,7 @@ import {
   requestItemValidator,
   requestStatusValidator,
 } from "./lib/validators";
+import { requireActiveWalletOperator } from "./lib/wallets";
 
 export const create = mutation({
   args: {
@@ -43,13 +45,21 @@ export const create = mutation({
     if (payer._id === requester._id) {
       fail("SELF_REQUEST", "Choose another person as the payer.");
     }
+    const createdAt = Date.now();
     const requestId = await ctx.db.insert("moneyRequests", {
       requesterId: requester._id,
       payerId: payer._id,
       amountPoisha: args.amountPoisha,
       ...(note ? { note } : {}),
       status: "pending",
-      createdAt: Date.now(),
+      createdAt,
+    });
+    await createInboxNotification(ctx, {
+      recipientUserId: payer._id,
+      kind: "request",
+      eventKey: "request.created",
+      referenceId: String(requestId),
+      createdAt,
     });
     const request = await ctx.db.get("moneyRequests", requestId);
     if (!request) {
@@ -98,9 +108,11 @@ export const accept = mutation({
     if (!requester) {
       fail("REQUEST_CORRUPT", "The requester could not be loaded.");
     }
+    const payerAccess = await requireActiveWalletOperator(ctx, payer);
     await limitTransfer(ctx, String(payer._id));
     const receipt = await commitTransfer(ctx, {
       sender: payer,
+      senderAccount: payerAccess.account,
       recipient: requester,
       amountPoisha: request.amountPoisha,
       note: request.note,
@@ -129,9 +141,17 @@ export const decline = mutation({
       fail("FORBIDDEN", "Only the requested payer can decline this request.");
     }
     assertRequestTransition(request.status, "declined");
+    const resolvedAt = Date.now();
     await ctx.db.patch("moneyRequests", request._id, {
       status: "declined",
-      resolvedAt: Date.now(),
+      resolvedAt,
+    });
+    await createInboxNotification(ctx, {
+      recipientUserId: request.requesterId,
+      kind: "request",
+      eventKey: "request.declined",
+      referenceId: String(request._id),
+      createdAt: resolvedAt,
     });
     const updated = await ctx.db.get("moneyRequests", request._id);
     if (!updated) {
@@ -154,9 +174,17 @@ export const cancel = mutation({
       fail("FORBIDDEN", "Only the requester can cancel this request.");
     }
     assertRequestTransition(request.status, "cancelled");
+    const resolvedAt = Date.now();
     await ctx.db.patch("moneyRequests", request._id, {
       status: "cancelled",
-      resolvedAt: Date.now(),
+      resolvedAt,
+    });
+    await createInboxNotification(ctx, {
+      recipientUserId: request.payerId,
+      kind: "request",
+      eventKey: "request.cancelled",
+      referenceId: String(request._id),
+      createdAt: resolvedAt,
     });
     const updated = await ctx.db.get("moneyRequests", request._id);
     if (!updated) {

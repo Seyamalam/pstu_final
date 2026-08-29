@@ -1,11 +1,11 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { getCurrentUser, userSummary } from "./lib/auth";
-import { fail } from "./lib/errors";
 import {
   accountSummaryValidator,
   userSummaryValidator,
 } from "./lib/validators";
+import { getActiveWalletAccess } from "./lib/wallets";
 
 export const get = query({
   args: {},
@@ -25,13 +25,8 @@ export const get = query({
     if (!user) {
       return null;
     }
-    const account = await ctx.db
-      .query("accounts")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
-      .unique();
-    if (!account) {
-      fail("ACCOUNT_NOT_FOUND", "Wallet account was not found.");
-    }
+    const access = await getActiveWalletAccess(ctx, user);
+    const account = access.account;
     return {
       user: userSummary(user),
       account: {
@@ -39,7 +34,10 @@ export const get = query({
         balancePoisha: account.balancePoisha,
         currency: account.currency,
       },
-      capabilities: { canSend: true, canRequest: true },
+      capabilities: {
+        canSend: access.role !== "viewer",
+        canRequest: account.kind !== "organization",
+      },
     };
   },
 });

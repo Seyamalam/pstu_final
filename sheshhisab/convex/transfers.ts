@@ -14,6 +14,7 @@ import {
   receiptForTransfer,
 } from "./lib/transfers";
 import { receiptValidator } from "./lib/validators";
+import { requireActiveWalletOperator } from "./lib/wallets";
 
 export const send = mutation({
   args: {
@@ -25,6 +26,7 @@ export const send = mutation({
   returns: receiptValidator,
   handler: async (ctx, args) => {
     const sender = await requireCurrentUser(ctx);
+    const senderAccess = await requireActiveWalletOperator(ctx, sender);
     const recipientHandle = normalizeHandle(args.recipientHandle);
     const recipient = await ctx.db
       .query("users")
@@ -36,11 +38,15 @@ export const send = mutation({
       fail("RECIPIENT_NOT_FOUND", "No wallet uses that handle.");
     }
     assertAmount(args.amountPoisha);
-    if (recipient._id === sender._id) {
+    if (
+      recipient._id === sender._id &&
+      senderAccess.account.kind !== "organization"
+    ) {
       fail("SELF_TRANSFER", "Choose another person as the recipient.");
     }
     const existing = await findIdempotentTransfer(ctx, {
       sender,
+      senderAccount: senderAccess.account,
       recipient,
       amountPoisha: args.amountPoisha,
       note: args.note,
@@ -52,6 +58,7 @@ export const send = mutation({
     await limitTransfer(ctx, String(sender._id));
     return await commitTransfer(ctx, {
       sender,
+      senderAccount: senderAccess.account,
       recipient,
       amountPoisha: args.amountPoisha,
       note: args.note,

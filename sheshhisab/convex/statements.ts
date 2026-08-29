@@ -4,12 +4,12 @@ import { query } from "./_generated/server";
 import { activityItemForEntry } from "./lib/activity";
 import { requireCurrentUser } from "./lib/auth";
 import { fail } from "./lib/errors";
-import { getAccountForUser } from "./lib/transfers";
 import {
   activityItemValidator,
   statementDayValidator,
   statementSummaryValidator,
 } from "./lib/validators";
+import { getActiveWalletAccess } from "./lib/wallets";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 export const MAX_STATEMENT_RANGE_MS = 93 * DAY_MS;
@@ -85,7 +85,7 @@ export const get = query({
     }
 
     const viewer = await requireCurrentUser(ctx);
-    const account = await getAccountForUser(ctx, viewer._id);
+    const { account } = await getActiveWalletAccess(ctx, viewer);
     const ledgerEntries = await ctx.db
       .query("ledgerEntries")
       .withIndex("by_accountId_and_createdAt", (q) =>

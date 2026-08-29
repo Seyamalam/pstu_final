@@ -3,13 +3,13 @@ import { query } from "./_generated/server";
 import { activityItemForEntry } from "./lib/activity";
 import { requireCurrentUser, userSummary } from "./lib/auth";
 import { requestItem } from "./lib/requests";
-import { getAccountForUser } from "./lib/transfers";
 import {
   accountSummaryValidator,
   activityItemValidator,
   requestItemValidator,
   userSummaryValidator,
 } from "./lib/validators";
+import { getActiveWalletAccess } from "./lib/wallets";
 
 export const get = query({
   args: {},
@@ -21,15 +21,17 @@ export const get = query({
   }),
   handler: async (ctx) => {
     const user = await requireCurrentUser(ctx);
-    const account = await getAccountForUser(ctx, user._id);
+    const { account } = await getActiveWalletAccess(ctx, user);
     const [pendingRequests, recentEntries] = await Promise.all([
-      ctx.db
-        .query("moneyRequests")
-        .withIndex("by_payerId_and_status_and_createdAt", (q) =>
-          q.eq("payerId", user._id).eq("status", "pending"),
-        )
-        .order("desc")
-        .take(5),
+      account.kind === "organization"
+        ? Promise.resolve([])
+        : ctx.db
+            .query("moneyRequests")
+            .withIndex("by_payerId_and_status_and_createdAt", (q) =>
+              q.eq("payerId", user._id).eq("status", "pending"),
+            )
+            .order("desc")
+            .take(5),
       ctx.db
         .query("ledgerEntries")
         .withIndex("by_accountId_and_createdAt", (q) =>

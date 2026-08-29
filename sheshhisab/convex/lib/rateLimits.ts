@@ -15,6 +15,16 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     rate: 20,
     period: MINUTE,
   },
+  externalRail: {
+    kind: "fixed window",
+    rate: 12,
+    period: MINUTE,
+  },
+  organizationChange: {
+    kind: "fixed window",
+    rate: 10,
+    period: MINUTE,
+  },
 });
 
 export async function limitRequestCreation(ctx: MutationCtx, userId: string) {
@@ -28,5 +38,24 @@ export async function limitTransfer(ctx: MutationCtx, userId: string) {
   const result = await rateLimiter.limit(ctx, "transferMoney", { key: userId });
   if (!result.ok) {
     fail("RATE_LIMITED", "Too many transfer attempts. Try again in a minute.");
+  }
+}
+
+export async function limitExternalRail(ctx: MutationCtx, key: string) {
+  const result = await rateLimiter.limit(ctx, "externalRail", { key });
+  if (!result.ok) {
+    fail("RATE_LIMITED", "Too many rail actions. Try again in a minute.");
+  }
+}
+
+export async function limitOrganizationChange(
+  ctx: MutationCtx,
+  userId: string,
+) {
+  const result = await rateLimiter.limit(ctx, "organizationChange", {
+    key: userId,
+  });
+  if (!result.ok) {
+    fail("RATE_LIMITED", "Too many organization changes. Try again soon.");
   }
 }

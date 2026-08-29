@@ -8,11 +8,13 @@ import {
   normalizeIdempotencyKey,
   normalizeNote,
 } from "./money";
+import { createInboxNotification } from "./notifications";
 
 type ReadCtx = QueryCtx | MutationCtx;
 
 type CommitTransferArgs = {
   sender: Doc<"users">;
+  senderAccount?: Doc<"accounts">;
   recipient: Doc<"users">;
   amountPoisha: bigint;
   note?: string;
@@ -35,8 +37,14 @@ export async function findIdempotentTransfer(
   if (!existing) {
     return null;
   }
+  const intendedSenderAccount =
+    input.senderAccount ?? (await getAccountForUser(ctx, input.sender._id));
+  const existingSenderAccountId =
+    existing.senderAccountId ??
+    (await getAccountForUser(ctx, existing.senderId))._id;
   const sameIntent =
     existing.recipientId === input.recipient._id &&
+    existingSenderAccountId === intendedSenderAccount._id &&
     existing.amountPoisha === input.amountPoisha &&
     existing.note === note &&
     existing.requestId === input.requestId;
@@ -64,28 +72,36 @@ export async function receiptForTransfer(
   ctx: ReadCtx,
   transfer: Doc<"transfers">,
 ) {
-  const [sender, recipient, senderAccount, recipientAccount, entries] =
-    await Promise.all([
-      ctx.db.get("users", transfer.senderId),
-      ctx.db.get("users", transfer.recipientId),
-      getAccountForUser(ctx, transfer.senderId),
-      getAccountForUser(ctx, transfer.recipientId),
-      ctx.db
-        .query("ledgerEntries")
-        .withIndex("by_transferId", (q) => q.eq("transferId", transfer._id))
-        .take(3),
-    ]);
+  const [
+    sender,
+    recipient,
+    legacySenderAccount,
+    legacyRecipientAccount,
+    entries,
+  ] = await Promise.all([
+    ctx.db.get("users", transfer.senderId),
+    ctx.db.get("users", transfer.recipientId),
+    getAccountForUser(ctx, transfer.senderId),
+    getAccountForUser(ctx, transfer.recipientId),
+    ctx.db
+      .query("ledgerEntries")
+      .withIndex("by_transferId", (q) => q.eq("transferId", transfer._id))
+      .take(3),
+  ]);
   if (!sender || !recipient) {
     fail("RECEIPT_CORRUPT", "The receipt participants could not be loaded.");
   }
+  const senderAccountId = transfer.senderAccountId ?? legacySenderAccount._id;
+  const recipientAccountId =
+    transfer.recipientAccountId ?? legacyRecipientAccount._id;
   const debit = entries.find((entry) => entry.direction === "debit");
   const credit = entries.find((entry) => entry.direction === "credit");
   if (
     !debit ||
     !credit ||
     entries.length !== 2 ||
-    debit.accountId !== senderAccount._id ||
-    credit.accountId !== recipientAccount._id ||
+    debit.accountId !== senderAccountId ||
+    credit.accountId !== recipientAccountId ||
     debit.amountPoisha !== transfer.amountPoisha ||
     credit.amountPoisha !== transfer.amountPoisha
   ) {
@@ -115,7 +131,10 @@ export async function commitTransfer(
   const note = normalizeNote(input.note);
   const idempotencyKey = normalizeIdempotencyKey(input.idempotencyKey);
 
-  if (input.sender._id === input.recipient._id) {
+  if (
+    input.sender._id === input.recipient._id &&
+    input.senderAccount?.kind !== "organization"
+  ) {
     fail("SELF_TRANSFER", "Choose another person as the recipient.");
   }
 
@@ -125,7 +144,7 @@ export async function commitTransfer(
   }
 
   const [senderAccount, recipientAccount] = await Promise.all([
-    getAccountForUser(ctx, input.sender._id),
+    input.senderAccount ?? getAccountForUser(ctx, input.sender._id),
     getAccountForUser(ctx, input.recipient._id),
   ]);
   const createdAt = Date.now();
@@ -140,6 +159,8 @@ export async function commitTransfer(
     idempotencyKey,
     senderId: input.sender._id,
     recipientId: input.recipient._id,
+    senderAccountId: senderAccount._id,
+    recipientAccountId: recipientAccount._id,
     amountPoisha: input.amountPoisha,
     ...(note ? { note } : {}),
     ...(input.requestId ? { requestId: input.requestId } : {}),
@@ -168,6 +189,13 @@ export async function commitTransfer(
     direction: "credit",
     amountPoisha: input.amountPoisha,
     balanceAfterPoisha: recipientBalanceAfterPoisha,
+    createdAt,
+  });
+  await createInboxNotification(ctx, {
+    recipientUserId: input.recipient._id,
+    kind: "transfer",
+    eventKey: "transfer.received",
+    referenceId: publicId,
     createdAt,
   });
 

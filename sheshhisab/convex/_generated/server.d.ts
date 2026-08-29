@@ -30,6 +30,11 @@ import type { DataModel } from "./dataModel.js";
 type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
+  readonly EXPO_ACCESS_TOKEN: string | undefined;
+  readonly PUSH_VAPID_PRIVATE_KEY: string | undefined;
+  readonly PUSH_VAPID_PUBLIC_KEY: string | undefined;
+  readonly PUSH_VAPID_SUBJECT: string | undefined;
+  readonly RAIL_REFERENCE_PEPPER: string | undefined;
 };
 
 /**

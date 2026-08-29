@@ -16,19 +16,26 @@ import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_money from "../lib/money.js";
+import type * as lib_notifications from "../lib/notifications.js";
 import type * as lib_qr from "../lib/qr.js";
+import type * as lib_rails from "../lib/rails.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
 import type * as lib_requestState from "../lib/requestState.js";
 import type * as lib_requests from "../lib/requests.js";
 import type * as lib_transfers from "../lib/transfers.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as lib_wallets from "../lib/wallets.js";
+import type * as notifications from "../notifications.js";
+import type * as pushDelivery from "../pushDelivery.js";
 import type * as qr from "../qr.js";
+import type * as rails from "../rails.js";
 import type * as receipts from "../receipts.js";
 import type * as requests from "../requests.js";
 import type * as statements from "../statements.js";
 import type * as transfers from "../transfers.js";
 import type * as users from "../users.js";
 import type * as viewer from "../viewer.js";
+import type * as wallets from "../wallets.js";
 
 import type {
   ApiFromModules,
@@ -45,19 +52,26 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/errors": typeof lib_errors;
   "lib/money": typeof lib_money;
+  "lib/notifications": typeof lib_notifications;
   "lib/qr": typeof lib_qr;
+  "lib/rails": typeof lib_rails;
   "lib/rateLimits": typeof lib_rateLimits;
   "lib/requestState": typeof lib_requestState;
   "lib/requests": typeof lib_requests;
   "lib/transfers": typeof lib_transfers;
   "lib/validators": typeof lib_validators;
+  "lib/wallets": typeof lib_wallets;
+  notifications: typeof notifications;
+  pushDelivery: typeof pushDelivery;
   qr: typeof qr;
+  rails: typeof rails;
   receipts: typeof receipts;
   requests: typeof requests;
   statements: typeof statements;
   transfers: typeof transfers;
   users: typeof users;
   viewer: typeof viewer;
+  wallets: typeof wallets;
 }>;
 
 /**

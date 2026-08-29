@@ -6,8 +6,8 @@ import { query } from "./_generated/server";
 import { activityItemForEntry } from "./lib/activity";
 import { requireCurrentUser } from "./lib/auth";
 import { fail } from "./lib/errors";
-import { getAccountForUser } from "./lib/transfers";
 import { activityItemValidator } from "./lib/validators";
+import { getActiveWalletAccess } from "./lib/wallets";
 
 export const list = query({
   args: { paginationOpts: paginationOptsValidator },
@@ -21,7 +21,7 @@ export const list = query({
       fail("INVALID_PAGE_SIZE", "Page size must be between 1 and 50.");
     }
     const viewer = await requireCurrentUser(ctx);
-    const account = await getAccountForUser(ctx, viewer._id);
+    const { account } = await getActiveWalletAccess(ctx, viewer);
     const result = await ctx.db
       .query("ledgerEntries")
       .withIndex("by_accountId_and_createdAt", (q) =>

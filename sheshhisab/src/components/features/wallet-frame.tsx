@@ -9,7 +9,7 @@ import {
   ScanLine,
   SendHorizontal,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type FormEvent,
   type ReactNode,
@@ -190,6 +190,7 @@ function navigationForPath(pathname: string): AppNavigationItem[] {
 export function WalletFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const session = authClient.useSession();
   const viewer = useQuery(api.viewer.get, isAuthenticated ? {} : "skip");
@@ -199,8 +200,12 @@ export function WalletFrame({ children }: { children: ReactNode }) {
   const [autoBootstrapping, setAutoBootstrapping] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) router.replace("/login");
-  }, [isAuthenticated, isLoading, router]);
+    if (!isLoading && !isAuthenticated) {
+      const query = searchParams.toString();
+      const next = query ? `${pathname}?${query}` : pathname;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    }
+  }, [isAuthenticated, isLoading, pathname, router, searchParams]);
 
   useEffect(() => {
     if (!isAuthenticated || viewer !== null || autoAttemptedRef.current) return;

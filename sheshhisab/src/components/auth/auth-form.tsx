@@ -19,6 +19,7 @@ import {
 } from "@/components/motion/button/stateful";
 import { Input } from "@/components/motion/input";
 import { authClient } from "@/lib/auth-client";
+import { safeNextPath } from "@/lib/safe-next-path";
 import { cn } from "@/lib/utils";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -203,8 +204,11 @@ export function AuthForm() {
       );
     }
 
+    const nextPath = safeNextPath(
+      new URLSearchParams(window.location.search).get("next"),
+    );
     setButtonState("success");
-    router.replace("/app");
+    router.replace(nextPath);
     router.refresh();
   };
 

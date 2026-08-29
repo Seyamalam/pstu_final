@@ -2,10 +2,13 @@
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
+  Building2,
   ChartNoAxesColumnIncreasing,
   House,
   LogOut,
   MoreHorizontal,
+  QrCode,
+  ReceiptText,
   ScanLine,
   SendHorizontal,
 } from "lucide-react";
@@ -18,6 +21,7 @@ import {
   useState,
 } from "react";
 import { type AppNavigationItem, AppShell } from "@/components/app/app-shell";
+import { Brand } from "@/components/app/brand";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import {
   type ButtonState,
@@ -114,53 +118,114 @@ function OnboardingForm({
   };
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-10">
-      <section className="w-full max-w-md rounded-[1.75rem] bg-card p-5 ring-1 ring-foreground/10 sm:p-7">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-          One last step
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">
-          Name your wallet.
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          People will use your handle to find you.
-        </p>
+    <main className="min-h-dvh px-4 py-5 sm:px-6 sm:py-7">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <Brand href="/" />
+        <span className="rounded-full bg-muted px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Step 2 of 2
+        </span>
+      </header>
 
-        <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-3">
-          <Input
-            label="Display name"
-            value={displayName}
-            onChange={setDisplayName}
-            autoComplete="name"
-            placeholder="Your name"
-            error={nameError}
-            reserveErrorLine
-            disabled={state === "loading"}
-          />
-          <Input
-            label="Handle"
-            value={handle}
-            onChange={setHandle}
-            autoComplete="username"
-            placeholder="your_handle"
-            error={handleError}
-            reserveErrorLine
-            disabled={state === "loading"}
-          />
-          {message ? <InlineError>{message}</InlineError> : null}
-          <StatefulButton
-            type="submit"
-            size="lg"
-            state={state}
-            loadingText="Creating wallet"
-            successText="Wallet ready"
-            errorText="Try again"
-            className="w-full"
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-8 py-10 lg:min-h-[calc(100dvh-6rem)] lg:grid-cols-[minmax(0,1fr)_28rem] lg:gap-16 lg:py-14">
+        <section aria-labelledby="onboarding-title" className="max-w-xl">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+            WALLET SETUP
+          </p>
+          <h1
+            id="onboarding-title"
+            className="mt-3 text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.05em] text-foreground sm:text-5xl"
           >
-            Create wallet
-          </StatefulButton>
-        </form>
-      </section>
+            One handle. Every হিসাব.
+          </h1>
+          <div className="mt-7 grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+            {[
+              {
+                icon: QrCode,
+                title: "Scan to pay",
+                detail: "No account number",
+              },
+              {
+                icon: ReceiptText,
+                title: "Clear receipts",
+                detail: "Every payment",
+              },
+              {
+                icon: Building2,
+                title: "Team wallets",
+                detail: "Roles and access",
+              },
+            ].map(({ icon: Icon, title, detail }) => (
+              <div
+                key={title}
+                className="flex items-center gap-3 rounded-2xl border border-foreground/10 bg-card/80 p-3.5"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <Icon aria-hidden="true" className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-foreground">
+                    {title}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {detail}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="w-full rounded-[1.75rem] bg-card p-5 ring-1 ring-foreground/10 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] sm:p-7">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+            PROFILE
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">
+            Name your wallet.
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Your handle is how people find you.
+          </p>
+
+          <form
+            onSubmit={submit}
+            noValidate
+            className="mt-6 flex flex-col gap-3"
+          >
+            <Input
+              label="Display name"
+              value={displayName}
+              onChange={setDisplayName}
+              autoComplete="name"
+              placeholder="Your name"
+              error={nameError}
+              reserveErrorLine
+              disabled={state === "loading"}
+            />
+            <Input
+              label="Handle"
+              value={handle}
+              onChange={setHandle}
+              autoComplete="username"
+              placeholder="your_handle"
+              error={handleError}
+              reserveErrorLine
+              disabled={state === "loading"}
+            />
+            {message ? <InlineError>{message}</InlineError> : null}
+            <StatefulButton
+              type="submit"
+              size="lg"
+              state={state}
+              loadingText="Creating wallet"
+              successText="Wallet ready"
+              errorText="Try again"
+              className="w-full"
+            >
+              Open wallet
+            </StatefulButton>
+          </form>
+        </section>
+      </div>
     </main>
   );
 }

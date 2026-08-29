@@ -6,6 +6,8 @@ SheshHisab is a closed-loop BDT wallet with responsive web and Expo clients over
 - [Hackathon rules](National_Hackathon.md)
 - [Project plan](docs/PROJECT_PLAN.md)
 - [Release checklist](docs/TODO.md)
+- [Feature map](FEATURES.md)
+- [Architecture](architecture.md)
 - [Web setup](sheshhisab/README.md)
 - [Expo setup](mobile/README.md)
 

@@ -1,4 +1,4 @@
-import { AlertCircle, LoaderCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function ScreenLoading({
@@ -7,13 +7,27 @@ export function ScreenLoading({
   label?: string;
 }) {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <output className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-foreground/10">
-        <LoaderCircle
-          aria-hidden="true"
-          className="size-4 animate-spin motion-reduce:animate-none"
-        />
-        <span>{label}</span>
+    <div className="flex min-h-[50vh] items-center justify-center px-4">
+      <output className="w-full max-w-sm" aria-label={label}>
+        <span className="mx-auto flex w-fit items-center gap-2.5 rounded-full bg-card px-4 py-2.5 text-sm text-muted-foreground ring-1 ring-foreground/10">
+          <span className="flex items-center gap-1" aria-hidden="true">
+            {[0, 1, 2].map((index) => (
+              <span
+                key={index}
+                className="size-1.5 animate-pulse rounded-full bg-primary motion-reduce:animate-none"
+                style={{ animationDelay: `${index * 120}ms` }}
+              />
+            ))}
+          </span>
+          <span>{label}</span>
+        </span>
+        <span className="mt-6 block space-y-3" aria-hidden="true">
+          <span className="block h-24 animate-pulse rounded-3xl bg-muted motion-reduce:animate-none" />
+          <span className="grid grid-cols-2 gap-3">
+            <span className="h-12 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
+            <span className="h-12 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
+          </span>
+        </span>
       </output>
     </div>
   );

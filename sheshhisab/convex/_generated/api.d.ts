@@ -10,10 +10,13 @@
 
 import type * as activity from "../activity.js";
 import type * as auth from "../auth.js";
+import type * as budgets from "../budgets.js";
 import type * as dashboard from "../dashboard.js";
+import type * as favorites from "../favorites.js";
 import type * as http from "../http.js";
 import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_budgets from "../lib/budgets.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_money from "../lib/money.js";
 import type * as lib_notifications from "../lib/notifications.js";
@@ -31,6 +34,7 @@ import type * as qr from "../qr.js";
 import type * as rails from "../rails.js";
 import type * as receipts from "../receipts.js";
 import type * as requests from "../requests.js";
+import type * as scheduledTransfers from "../scheduledTransfers.js";
 import type * as statements from "../statements.js";
 import type * as transfers from "../transfers.js";
 import type * as users from "../users.js";
@@ -46,10 +50,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   auth: typeof auth;
+  budgets: typeof budgets;
   dashboard: typeof dashboard;
+  favorites: typeof favorites;
   http: typeof http;
   "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
+  "lib/budgets": typeof lib_budgets;
   "lib/errors": typeof lib_errors;
   "lib/money": typeof lib_money;
   "lib/notifications": typeof lib_notifications;
@@ -67,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   rails: typeof rails;
   receipts: typeof receipts;
   requests: typeof requests;
+  scheduledTransfers: typeof scheduledTransfers;
   statements: typeof statements;
   transfers: typeof transfers;
   users: typeof users;

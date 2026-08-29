@@ -1,6 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { userSummary } from "./auth";
+import { normalizeBudgetCategory, recordBudgetSpend } from "./budgets";
 import { fail } from "./errors";
 import {
   assertAmount,
@@ -16,8 +17,10 @@ type CommitTransferArgs = {
   sender: Doc<"users">;
   senderAccount?: Doc<"accounts">;
   recipient: Doc<"users">;
+  recipientAccount?: Doc<"accounts">;
   amountPoisha: bigint;
   note?: string;
+  category?: string;
   idempotencyKey: string;
   requestId?: Id<"moneyRequests">;
 };
@@ -27,6 +30,9 @@ export async function findIdempotentTransfer(
   input: CommitTransferArgs,
 ): Promise<Doc<"transfers"> | null> {
   const note = normalizeNote(input.note);
+  const category = input.category
+    ? normalizeBudgetCategory(input.category)
+    : undefined;
   const idempotencyKey = normalizeIdempotencyKey(input.idempotencyKey);
   const existing = await ctx.db
     .query("transfers")
@@ -42,11 +48,19 @@ export async function findIdempotentTransfer(
   const existingSenderAccountId =
     existing.senderAccountId ??
     (await getAccountForUser(ctx, existing.senderId))._id;
+  const intendedRecipientAccount =
+    input.recipientAccount ??
+    (await getAccountForUser(ctx, input.recipient._id));
+  const existingRecipientAccountId =
+    existing.recipientAccountId ??
+    (await getAccountForUser(ctx, existing.recipientId))._id;
   const sameIntent =
     existing.recipientId === input.recipient._id &&
     existingSenderAccountId === intendedSenderAccount._id &&
+    existingRecipientAccountId === intendedRecipientAccount._id &&
     existing.amountPoisha === input.amountPoisha &&
     existing.note === note &&
+    existing.category === category &&
     existing.requestId === input.requestId;
   if (!sameIntent) {
     fail(
@@ -114,6 +128,7 @@ export async function receiptForTransfer(
     recipient: userSummary(recipient),
     amountPoisha: transfer.amountPoisha,
     note: transfer.note ?? null,
+    category: transfer.category ?? null,
     createdAt: transfer.createdAt,
     debitEntryId: debit._id,
     creditEntryId: credit._id,
@@ -129,6 +144,9 @@ export async function commitTransfer(
 ) {
   assertAmount(input.amountPoisha);
   const note = normalizeNote(input.note);
+  const category = input.category
+    ? normalizeBudgetCategory(input.category)
+    : undefined;
   const idempotencyKey = normalizeIdempotencyKey(input.idempotencyKey);
 
   if (
@@ -145,7 +163,7 @@ export async function commitTransfer(
 
   const [senderAccount, recipientAccount] = await Promise.all([
     input.senderAccount ?? getAccountForUser(ctx, input.sender._id),
-    getAccountForUser(ctx, input.recipient._id),
+    input.recipientAccount ?? getAccountForUser(ctx, input.recipient._id),
   ]);
   const createdAt = Date.now();
   const { senderBalanceAfterPoisha, recipientBalanceAfterPoisha } =
@@ -163,6 +181,7 @@ export async function commitTransfer(
     recipientAccountId: recipientAccount._id,
     amountPoisha: input.amountPoisha,
     ...(note ? { note } : {}),
+    ...(category ? { category } : {}),
     ...(input.requestId ? { requestId: input.requestId } : {}),
     createdAt,
   });
@@ -174,6 +193,12 @@ export async function commitTransfer(
   });
   await ctx.db.patch("accounts", recipientAccount._id, {
     balancePoisha: recipientBalanceAfterPoisha,
+  });
+  await recordBudgetSpend(ctx, {
+    accountId: senderAccount._id,
+    category,
+    amountPoisha: input.amountPoisha,
+    createdAt,
   });
   const debitEntryId = await ctx.db.insert("ledgerEntries", {
     transferId,
@@ -206,6 +231,7 @@ export async function commitTransfer(
     recipient: userSummary(input.recipient),
     amountPoisha: input.amountPoisha,
     note: note ?? null,
+    category: category ?? null,
     createdAt,
     debitEntryId,
     creditEntryId,

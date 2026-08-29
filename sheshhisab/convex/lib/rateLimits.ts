@@ -25,6 +25,11 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     rate: 10,
     period: MINUTE,
   },
+  featureCreation: {
+    kind: "fixed window",
+    rate: 15,
+    period: MINUTE,
+  },
 });
 
 export async function limitRequestCreation(ctx: MutationCtx, userId: string) {
@@ -57,5 +62,14 @@ export async function limitOrganizationChange(
   });
   if (!result.ok) {
     fail("RATE_LIMITED", "Too many organization changes. Try again soon.");
+  }
+}
+
+export async function limitFeatureCreation(ctx: MutationCtx, userId: string) {
+  const result = await rateLimiter.limit(ctx, "featureCreation", {
+    key: userId,
+  });
+  if (!result.ok) {
+    fail("RATE_LIMITED", "Too many changes. Try again in a minute.");
   }
 }

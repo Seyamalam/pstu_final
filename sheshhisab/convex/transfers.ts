@@ -21,6 +21,7 @@ export const send = mutation({
     recipientHandle: v.string(),
     amountPoisha: v.int64(),
     note: v.optional(v.string()),
+    category: v.optional(v.string()),
     idempotencyKey: v.string(),
   },
   returns: receiptValidator,
@@ -50,6 +51,7 @@ export const send = mutation({
       recipient,
       amountPoisha: args.amountPoisha,
       note: args.note,
+      category: args.category,
       idempotencyKey: args.idempotencyKey,
     });
     if (existing) {
@@ -62,6 +64,7 @@ export const send = mutation({
       recipient,
       amountPoisha: args.amountPoisha,
       note: args.note,
+      category: args.category,
       idempotencyKey: args.idempotencyKey,
     });
   },

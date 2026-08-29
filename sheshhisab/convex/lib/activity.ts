@@ -28,6 +28,7 @@ export async function activityItemForEntry(
     direction: entry.direction,
     amountPoisha: entry.amountPoisha,
     note: transfer.note ?? null,
+    category: transfer.category ?? null,
     createdAt: transfer.createdAt,
     balanceAfterPoisha: entry.balanceAfterPoisha,
     counterparty: userSummary(counterparty),

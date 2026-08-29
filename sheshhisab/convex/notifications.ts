@@ -107,7 +107,12 @@ export const list = query({
       kind: notification.kind,
       eventKey: notification.eventKey,
       referenceId: notification.referenceId,
-      readAt: notification.readAt ?? null,
+      readAt:
+        notification.readAt ??
+        (user.notificationsReadThrough !== undefined &&
+        notification.createdAt <= user.notificationsReadThrough
+          ? user.notificationsReadThrough
+          : null),
       createdAt: notification.createdAt,
     }));
   },
@@ -125,12 +130,28 @@ export const markRead = mutation({
     if (!notification || notification.recipientUserId !== user._id) {
       fail("NOTIFICATION_NOT_FOUND", "Notification was not found.");
     }
-    if (!notification.readAt) {
+    const globallyRead =
+      user.notificationsReadThrough !== undefined &&
+      notification.createdAt <= user.notificationsReadThrough;
+    if (!notification.readAt && !globallyRead) {
       await ctx.db.patch("notificationInbox", notification._id, {
         readAt: Date.now(),
       });
     }
     return null;
+  },
+});
+
+export const markAllRead = mutation({
+  args: {},
+  returns: v.object({ readThrough: v.number() }),
+  handler: async (ctx) => {
+    const user = await requireCurrentUser(ctx);
+    const readThrough = Date.now();
+    await ctx.db.patch("users", user._id, {
+      notificationsReadThrough: readThrough,
+    });
+    return { readThrough };
   },
 });
 

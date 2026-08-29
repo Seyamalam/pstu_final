@@ -25,11 +25,11 @@ export const create = mutation({
     payerHandle: v.string(),
     amountPoisha: v.int64(),
     note: v.optional(v.string()),
+    idempotencyKey: v.optional(v.string()),
   },
   returns: requestItemValidator,
   handler: async (ctx, args) => {
     const requester = await requireCurrentUser(ctx);
-    await limitRequestCreation(ctx, String(requester._id));
     assertAmount(args.amountPoisha);
     const payerHandle = normalizeHandle(args.payerHandle);
     const note = normalizeNote(args.note);
@@ -45,11 +45,39 @@ export const create = mutation({
     if (payer._id === requester._id) {
       fail("SELF_REQUEST", "Choose another person as the payer.");
     }
+    const creationIdempotencyKey = args.idempotencyKey
+      ? normalizeIdempotencyKey(args.idempotencyKey)
+      : undefined;
+    if (creationIdempotencyKey) {
+      const existing = await ctx.db
+        .query("moneyRequests")
+        .withIndex("by_requesterId_and_creationIdempotencyKey", (q) =>
+          q
+            .eq("requesterId", requester._id)
+            .eq("creationIdempotencyKey", creationIdempotencyKey),
+        )
+        .unique();
+      if (existing) {
+        const sameIntent =
+          existing.payerId === payer._id &&
+          existing.amountPoisha === args.amountPoisha &&
+          existing.note === note;
+        if (!sameIntent) {
+          fail(
+            "IDEMPOTENCY_CONFLICT",
+            "Request key belongs to another request.",
+          );
+        }
+        return await requestItem(ctx, existing);
+      }
+    }
+    await limitRequestCreation(ctx, String(requester._id));
     const createdAt = Date.now();
     const requestId = await ctx.db.insert("moneyRequests", {
       requesterId: requester._id,
       payerId: payer._id,
       amountPoisha: args.amountPoisha,
+      ...(creationIdempotencyKey ? { creationIdempotencyKey } : {}),
       ...(note ? { note } : {}),
       status: "pending",
       createdAt,
@@ -63,6 +91,22 @@ export const create = mutation({
     });
     const request = await ctx.db.get("moneyRequests", requestId);
     if (!request) {
+      fail("REQUEST_NOT_FOUND", "Money request was not found.");
+    }
+    return await requestItem(ctx, request);
+  },
+});
+
+export const get = query({
+  args: { requestId: v.id("moneyRequests") },
+  returns: requestItemValidator,
+  handler: async (ctx, args) => {
+    const viewer = await requireCurrentUser(ctx);
+    const request = await ctx.db.get("moneyRequests", args.requestId);
+    if (
+      !request ||
+      (request.requesterId !== viewer._id && request.payerId !== viewer._id)
+    ) {
       fail("REQUEST_NOT_FOUND", "Money request was not found.");
     }
     return await requestItem(ctx, request);

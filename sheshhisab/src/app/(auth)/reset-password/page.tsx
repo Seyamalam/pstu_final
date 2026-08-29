@@ -5,6 +5,7 @@ import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { ResetPasswordForm } from "@/components/auth/password-recovery-form";
 
 export const metadata: Metadata = { title: "Choose a new password" };
+export const instant = false;
 
 export default async function ResetPasswordPage({
   searchParams,

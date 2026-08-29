@@ -24,7 +24,9 @@ Next.js client for the SheshHisab closed-loop BDT wallet.
 - Activity history, date-range analytics, and statements
 - Participant-only receipts and print-to-PDF export
 - Responsive five-item mobile navigation
-- Light/dark themes, reduced motion, PWA metadata, and generated brand artwork
+- Installable PWA with an offline fallback and home-screen shortcuts
+- Browser notification controls with permission and feature checks
+- Light/dark themes, reduced motion, and generated brand artwork
 
 ## Architecture
 
@@ -74,6 +76,7 @@ CONVEX_DEPLOYMENT
 NEXT_PUBLIC_CONVEX_URL
 NEXT_PUBLIC_CONVEX_SITE_URL
 NEXT_PUBLIC_SITE_URL
+NEXT_PUBLIC_VAPID_PUBLIC_KEY # optional until remote push delivery is connected
 ```
 
 ### Convex environment
@@ -84,6 +87,18 @@ SITE_URL
 ```
 
 Never expose `BETTER_AUTH_SECRET` through a `NEXT_PUBLIC_*` variable or commit it.
+
+Setting a VAPID public key alone does not enable remote notifications. The
+authenticated subscription persistence and delivery functions must also be
+connected through `src/lib/push-subscription-adapter.ts`.
+
+## PWA cache policy
+
+The service worker caches the offline page, brand icons, and immutable
+`/_next/static/` files. It always sends page navigations to the network and
+uses the offline page only when navigation fails. It never stores auth API
+responses, Convex traffic, wallet pages, receipts, statements, balances, or
+transaction data.
 
 ## Checks
 
@@ -104,6 +119,8 @@ src/components/features/        wallet screens
 src/components/motion/          source-owned interaction primitives
 src/lib/auth-*.ts                Better Auth browser and server integration
 src/lib/pay-link.ts              strict payment-link parsing
+src/lib/pwa.ts                   web push capability and payload helpers
+public/sw.js                     narrow static cache and notification handling
 convex/schema.ts                 wallet tables and indexes
 convex/lib/transfers.ts          shared transfer transaction logic
 convex/transfers.ts              authenticated send mutation

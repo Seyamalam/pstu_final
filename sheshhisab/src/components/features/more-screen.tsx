@@ -1,5 +1,6 @@
 import { ChevronRight, FileChartColumn, HandCoins, QrCode } from "lucide-react";
 import Link from "next/link";
+import { PwaSettings } from "./pwa-settings";
 import { PageHeading } from "./screen-states";
 
 const actions = [
@@ -30,6 +31,7 @@ export function MoreScreen() {
           </Link>
         ))}
       </section>
+      <PwaSettings />
     </div>
   );
 }

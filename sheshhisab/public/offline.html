@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#087a55" />
+    <title>Offline · SheshHisab</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background: #f6f8f7;
+        color: #102a33;
+      }
+      body {
+        display: grid;
+        min-height: 100dvh;
+        margin: 0;
+        place-items: center;
+        background-image:
+          linear-gradient(to right, rgb(16 42 51 / 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgb(16 42 51 / 0.05) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      main {
+        width: min(25rem, calc(100% - 2rem));
+        box-sizing: border-box;
+        padding: 2rem;
+        border: 1px solid rgb(16 42 51 / 0.12);
+        border-radius: 1.5rem;
+        background: #fff;
+        text-align: center;
+        box-shadow: 0 18px 48px rgb(16 42 51 / 0.08);
+      }
+      img {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+      }
+      h1 {
+        margin: 1rem 0 0;
+        font-size: 1.75rem;
+        letter-spacing: -0.04em;
+      }
+      p {
+        margin: 0.6rem 0 1.5rem;
+        color: #5e726f;
+        line-height: 1.5;
+      }
+      button {
+        min-height: 2.75rem;
+        border: 0;
+        border-radius: 0.75rem;
+        padding: 0 1rem;
+        background: #087a55;
+        color: #fff;
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid rgb(8 122 85 / 0.35);
+        outline-offset: 2px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          background: #0b1715;
+          color: #eef8f3;
+        }
+        body {
+          background-image:
+            linear-gradient(to right, rgb(238 248 243 / 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(238 248 243 / 0.05) 1px, transparent 1px);
+        }
+        main {
+          border-color: #29423c;
+          background: #12221f;
+        }
+        p {
+          color: #9db5ae;
+        }
+        button {
+          background: #55d5a4;
+          color: #072019;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icon-192.png" alt="" width="56" height="56" />
+      <h1>You're offline</h1>
+      <p>Reconnect to open your wallet and see current balances.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

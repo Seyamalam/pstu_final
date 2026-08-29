@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { PwaProvider } from "@/components/app/pwa-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,6 +25,28 @@ export const metadata: Metadata = {
   description:
     "Send, request, scan, and track every taka from one fast wallet.",
   manifest: "/manifest.webmanifest",
+  applicationName: "SheshHisab",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SheshHisab",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/apple-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#087a55" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1715" },
+  ],
+  colorScheme: "light dark",
+  viewportFit: "cover",
 };
 
 const themeScript = `(() => { try { const saved = localStorage.getItem('sheshhisab.theme'); const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.classList.toggle('dark', dark); document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; } catch {} })();`;
@@ -41,7 +64,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {themeScript}
         </Script>
       </head>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <PwaProvider>{children}</PwaProvider>
+      </body>
     </html>
   );
 }

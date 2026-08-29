@@ -39,6 +39,36 @@ export const activityItemValidator = v.object({
   counterparty: userSummaryValidator,
 });
 
+export const payeeQrValidator = v.object({
+  version: v.literal(1),
+  kind: v.literal("payee"),
+  payload: v.string(),
+  payee: userSummaryValidator,
+});
+
+export const statementDayValidator = v.object({
+  dayStart: v.number(),
+  entryCount: v.number(),
+  creditTotalPoisha: v.int64(),
+  debitTotalPoisha: v.int64(),
+  netPoisha: v.int64(),
+});
+
+export const statementSummaryValidator = v.object({
+  fromInclusive: v.number(),
+  toExclusive: v.number(),
+  entryCount: v.number(),
+  creditCount: v.number(),
+  debitCount: v.number(),
+  creditTotalPoisha: v.int64(),
+  debitTotalPoisha: v.int64(),
+  netPoisha: v.int64(),
+  largestCreditPoisha: v.int64(),
+  largestDebitPoisha: v.int64(),
+  openingBalancePoisha: v.union(v.int64(), v.null()),
+  closingBalancePoisha: v.union(v.int64(), v.null()),
+});
+
 export const requestStatusValidator = v.union(
   v.literal("pending"),
   v.literal("paid"),

@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import {
   assertAmount,
   calculateTransferBalances,
@@ -17,46 +16,45 @@ describe("money domain", () => {
       BigInt(50_001),
     );
 
-    assert.equal(result.senderBalanceAfterPoisha, BigInt(9_949_999));
-    assert.equal(result.recipientBalanceAfterPoisha, BigInt(2_050_001));
-    assert.equal(
+    expect(result.senderBalanceAfterPoisha).toBe(BigInt(9_949_999));
+    expect(result.recipientBalanceAfterPoisha).toBe(BigInt(2_050_001));
+    expect(
       result.senderBalanceAfterPoisha + result.recipientBalanceAfterPoisha,
-      before,
-    );
+    ).toBe(before);
   });
 
   it("rejects invalid or unaffordable amounts", () => {
-    assert.throws(() => assertAmount(BigInt(0)));
-    assert.throws(() => assertAmount(BigInt(-1)));
-    assert.throws(() =>
+    expect(() => assertAmount(BigInt(0))).toThrow();
+    expect(() => assertAmount(BigInt(-1))).toThrow();
+    expect(() =>
       calculateTransferBalances(BigInt(100), BigInt(0), BigInt(101)),
-    );
-    assert.throws(() =>
+    ).toThrow();
+    expect(() =>
       calculateTransferBalances(
         BigInt(100),
         BigInt("9223372036854775807"),
         BigInt(1),
       ),
-    );
+    ).toThrow();
   });
 
   it("normalizes handles and optional notes", () => {
-    assert.equal(normalizeHandle(" @Alice_7 "), "alice_7");
-    assert.equal(normalizeNote("  lunch  "), "lunch");
-    assert.equal(normalizeNote("   "), undefined);
+    expect(normalizeHandle(" @Alice_7 ")).toBe("alice_7");
+    expect(normalizeNote("  lunch  ")).toBe("lunch");
+    expect(normalizeNote("   ")).toBeUndefined();
   });
 });
 
 describe("money request state", () => {
   it("allows each terminal transition from pending", () => {
-    assert.doesNotThrow(() => assertRequestTransition("pending", "paid"));
-    assert.doesNotThrow(() => assertRequestTransition("pending", "declined"));
-    assert.doesNotThrow(() => assertRequestTransition("pending", "cancelled"));
+    expect(() => assertRequestTransition("pending", "paid")).not.toThrow();
+    expect(() => assertRequestTransition("pending", "declined")).not.toThrow();
+    expect(() => assertRequestTransition("pending", "cancelled")).not.toThrow();
   });
 
   it("does not change a terminal request", () => {
-    assert.throws(() => assertRequestTransition("paid", "declined"));
-    assert.throws(() => assertRequestTransition("declined", "paid"));
-    assert.throws(() => assertRequestTransition("cancelled", "paid"));
+    expect(() => assertRequestTransition("paid", "declined")).toThrow();
+    expect(() => assertRequestTransition("declined", "paid")).toThrow();
+    expect(() => assertRequestTransition("cancelled", "paid")).toThrow();
   });
 });

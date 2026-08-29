@@ -68,7 +68,6 @@ export const accept = mutation({
   handler: async (ctx, args) => {
     const idempotencyKey = normalizeIdempotencyKey(args.idempotencyKey);
     const payer = await requireCurrentUser(ctx);
-    await limitTransfer(ctx, String(payer._id));
     const request = await ctx.db.get("moneyRequests", args.requestId);
     if (!request) {
       fail("REQUEST_NOT_FOUND", "Money request was not found.");
@@ -78,8 +77,19 @@ export const accept = mutation({
     }
     if (request.status === "paid" && request.transferId) {
       const existing = await ctx.db.get("transfers", request.transferId);
-      if (!existing) {
+      if (
+        !existing ||
+        existing.senderId !== payer._id ||
+        existing.recipientId !== request.requesterId ||
+        existing.requestId !== request._id
+      ) {
         fail("REQUEST_CORRUPT", "The request payment could not be loaded.");
+      }
+      if (existing.idempotencyKey !== idempotencyKey) {
+        fail(
+          "IDEMPOTENCY_CONFLICT",
+          "This request was paid with a different payment key.",
+        );
       }
       return await receiptForTransfer(ctx, existing);
     }
@@ -88,6 +98,7 @@ export const accept = mutation({
     if (!requester) {
       fail("REQUEST_CORRUPT", "The requester could not be loaded.");
     }
+    await limitTransfer(ctx, String(payer._id));
     const receipt = await commitTransfer(ctx, {
       sender: payer,
       recipient: requester,

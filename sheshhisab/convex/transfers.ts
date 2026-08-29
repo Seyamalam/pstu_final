@@ -2,9 +2,17 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
 import { fail } from "./lib/errors";
-import { normalizeHandle, normalizeIdempotencyKey } from "./lib/money";
+import {
+  assertAmount,
+  normalizeHandle,
+  normalizeIdempotencyKey,
+} from "./lib/money";
 import { limitTransfer } from "./lib/rateLimits";
-import { commitTransfer, receiptForTransfer } from "./lib/transfers";
+import {
+  commitTransfer,
+  findIdempotentTransfer,
+  receiptForTransfer,
+} from "./lib/transfers";
 import { receiptValidator } from "./lib/validators";
 
 export const send = mutation({
@@ -17,7 +25,6 @@ export const send = mutation({
   returns: receiptValidator,
   handler: async (ctx, args) => {
     const sender = await requireCurrentUser(ctx);
-    await limitTransfer(ctx, String(sender._id));
     const recipientHandle = normalizeHandle(args.recipientHandle);
     const recipient = await ctx.db
       .query("users")
@@ -28,6 +35,21 @@ export const send = mutation({
     if (!recipient) {
       fail("RECIPIENT_NOT_FOUND", "No wallet uses that handle.");
     }
+    assertAmount(args.amountPoisha);
+    if (recipient._id === sender._id) {
+      fail("SELF_TRANSFER", "Choose another person as the recipient.");
+    }
+    const existing = await findIdempotentTransfer(ctx, {
+      sender,
+      recipient,
+      amountPoisha: args.amountPoisha,
+      note: args.note,
+      idempotencyKey: args.idempotencyKey,
+    });
+    if (existing) {
+      return await receiptForTransfer(ctx, existing);
+    }
+    await limitTransfer(ctx, String(sender._id));
     return await commitTransfer(ctx, {
       sender,
       recipient,

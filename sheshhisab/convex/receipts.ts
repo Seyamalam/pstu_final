@@ -24,7 +24,7 @@ export const getByPublicId = query({
       transfer.senderId !== viewer._id &&
       transfer.recipientId !== viewer._id
     ) {
-      fail("FORBIDDEN", "This receipt does not belong to your wallet.");
+      fail("RECEIPT_NOT_FOUND", "Receipt was not found.");
     }
     return await receiptForTransfer(ctx, transfer);
   },

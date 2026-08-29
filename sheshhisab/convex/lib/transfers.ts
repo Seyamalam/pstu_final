@@ -20,6 +20,35 @@ type CommitTransferArgs = {
   requestId?: Id<"moneyRequests">;
 };
 
+export async function findIdempotentTransfer(
+  ctx: ReadCtx,
+  input: CommitTransferArgs,
+): Promise<Doc<"transfers"> | null> {
+  const note = normalizeNote(input.note);
+  const idempotencyKey = normalizeIdempotencyKey(input.idempotencyKey);
+  const existing = await ctx.db
+    .query("transfers")
+    .withIndex("by_senderId_and_idempotencyKey", (q) =>
+      q.eq("senderId", input.sender._id).eq("idempotencyKey", idempotencyKey),
+    )
+    .unique();
+  if (!existing) {
+    return null;
+  }
+  const sameIntent =
+    existing.recipientId === input.recipient._id &&
+    existing.amountPoisha === input.amountPoisha &&
+    existing.note === note &&
+    existing.requestId === input.requestId;
+  if (!sameIntent) {
+    fail(
+      "IDEMPOTENCY_CONFLICT",
+      "This payment key was already used for a different payment.",
+    );
+  }
+  return existing;
+}
+
 export async function getAccountForUser(ctx: ReadCtx, userId: Id<"users">) {
   const account = await ctx.db
     .query("accounts")
@@ -90,24 +119,8 @@ export async function commitTransfer(
     fail("SELF_TRANSFER", "Choose another person as the recipient.");
   }
 
-  const existing = await ctx.db
-    .query("transfers")
-    .withIndex("by_senderId_and_idempotencyKey", (q) =>
-      q.eq("senderId", input.sender._id).eq("idempotencyKey", idempotencyKey),
-    )
-    .unique();
+  const existing = await findIdempotentTransfer(ctx, input);
   if (existing) {
-    const sameIntent =
-      existing.recipientId === input.recipient._id &&
-      existing.amountPoisha === input.amountPoisha &&
-      existing.note === note &&
-      existing.requestId === input.requestId;
-    if (!sameIntent) {
-      fail(
-        "IDEMPOTENCY_CONFLICT",
-        "This payment key was already used for a different payment.",
-      );
-    }
     return await receiptForTransfer(ctx, existing);
   }
 

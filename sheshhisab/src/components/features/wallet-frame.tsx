@@ -23,6 +23,8 @@ import {
 import { type AppNavigationItem, AppShell } from "@/components/app/app-shell";
 import { Brand } from "@/components/app/brand";
 import { ThemeToggle } from "@/components/app/theme-toggle";
+import { NotificationBell } from "@/components/features/notification-bell";
+import { WalletSwitcher } from "@/components/features/wallet-switcher";
 import {
   type ButtonState,
   StatefulButton,
@@ -31,7 +33,7 @@ import { Input } from "@/components/motion/input";
 import { authClient } from "@/lib/auth-client";
 import { api } from "../../../convex/_generated/api";
 
-import { errorMessage, initials, normalizeHandleInput } from "./money";
+import { errorMessage, normalizeHandleInput } from "./money";
 import { InlineError, ScreenLoading } from "./screen-states";
 
 const PENDING_PROFILE_KEY = "sheshhisab.pendingProfile";
@@ -338,14 +340,8 @@ export function WalletFrame({ children }: { children: ReactNode }) {
       pageLabel={`@${viewer.user.handle}`}
       headerActions={
         <>
-          <span className="hidden items-center gap-2 sm:flex">
-            <span className="grid size-8 place-items-center rounded-xl bg-muted font-mono text-[10px] font-semibold">
-              {initials(viewer.user.displayName)}
-            </span>
-            <span className="max-w-36 truncate text-sm font-medium">
-              {viewer.user.displayName}
-            </span>
-          </span>
+          <WalletSwitcher />
+          <NotificationBell />
           <ThemeToggle />
           <button
             type="button"

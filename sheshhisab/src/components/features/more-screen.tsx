@@ -1,10 +1,21 @@
-import { ChevronRight, FileChartColumn, HandCoins, QrCode } from "lucide-react";
+import {
+  Bell,
+  Building2,
+  ChevronRight,
+  FileChartColumn,
+  HandCoins,
+  Landmark,
+  QrCode,
+} from "lucide-react";
 import Link from "next/link";
 import { PwaSettings } from "./pwa-settings";
 import { PageHeading } from "./screen-states";
 
 const actions = [
   { href: "/app/request", label: "Request money", icon: HandCoins },
+  { href: "/app/money", label: "Add or withdraw", icon: Landmark },
+  { href: "/app/wallets", label: "Wallets and members", icon: Building2 },
+  { href: "/app/notifications", label: "Alerts", icon: Bell },
   { href: "/app/statements", label: "Statements", icon: FileChartColumn },
   { href: "/app/scan", label: "My payment QR", icon: QrCode },
 ];

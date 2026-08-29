@@ -71,10 +71,10 @@ function Navigation() {
         <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
         <Stack.Protected guard={!isAuthenticated}>
           <Stack.Screen name="sign-in" options={{ headerShown: false, animation: 'fade' }} />
-          <Stack.Screen name="sign-up" options={{ title: 'Create account' }} />
+          <Stack.Screen name="sign-up" options={{ headerShown: false, animation: 'fade_from_bottom' }} />
         </Stack.Protected>
         <Stack.Protected guard={isAuthenticated}>
-          <Stack.Screen name="onboarding" options={{ title: 'Your wallet' }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
           <Stack.Screen name="send" options={{ title: 'Send' }} />
           <Stack.Screen name="add-money" options={{ title: 'Add money' }} />

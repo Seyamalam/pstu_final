@@ -97,7 +97,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Page title="Settings">
+    <Page title="Settings" safeTop>
       <Card className="overflow-hidden">
         <Item>
           <Item.Content>

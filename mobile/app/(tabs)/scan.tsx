@@ -42,7 +42,7 @@ export default function ScanScreen() {
   }
 
   return (
-    <Page title="Scan">
+    <Page title="Scan" safeTop>
       <View className="flex-row gap-2">
         <Button
           className="flex-1"
@@ -97,4 +97,3 @@ export default function ScanScreen() {
     </Page>
   );
 }
-

@@ -1,83 +1,108 @@
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Link, router } from 'expo-router';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react-native';
 import { Button } from 'panelui-native/components/button';
-import { Card } from 'panelui-native/components/card';
 import { Input } from 'panelui-native/components/input';
 import { Text } from 'panelui-native/primitives/text';
-import { useThemeMode } from 'panelui-native/theme';
+import { useCSSVariable } from 'uniwind';
 
+import { AuthShell } from '@/components/auth-shell';
 import { authClient } from '@/lib/auth-client';
 
 export default function SignInScreen() {
-  const { mode } = useThemeMode();
+  const foreground = useCSSVariable('--color-muted-foreground') as string | undefined;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function submit() {
     setError(null);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must have at least 8 characters.');
+      return;
+    }
     setSubmitting(true);
-    const result = await authClient.signIn.email({ email: email.trim(), password });
+    const result = await authClient.signIn.email({ email: normalizedEmail, password });
     setSubmitting(false);
     if (result.error) {
-      setError(result.error.message || 'Sign in failed.');
+      setError('Email or password is incorrect.');
       return;
     }
     router.replace('/');
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View className="flex-1 justify-center gap-7 px-5 py-12">
-        <View className="gap-1">
-          <Image
-            source={
-              mode === 'dark'
-                ? require('../assets/logo-dark.png')
-                : require('../assets/logo-light.png')
-            }
-            style={{ width: 72, height: 72, marginBottom: 8 }}
-            resizeMode="contain"
-            accessibilityLabel="SheshHisab"
-          />
-          <Text size="3xl" weight="bold">SheshHisab</Text>
+    <AuthShell
+      eyebrow="WELCOME BACK"
+      title="Your money, ready when you are."
+      footer={(
+        <View className="flex-row items-center justify-center gap-1">
+          <Text muted size="sm">New here?</Text>
+          <Link href="/sign-up" asChild>
+            <Button size="sm" variant="ghost">Create account</Button>
+          </Link>
         </View>
-        <Card>
-          <Card.Header>
-            <Card.Title>Sign in</Card.Title>
-          </Card.Header>
-          <Card.Content className="gap-3">
-            <Input
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              accessibilityLabel="Email"
-            />
-            <Input
-              autoComplete="current-password"
-              placeholder="Password"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              accessibilityLabel="Password"
-              onSubmitEditing={submit}
-            />
-            {error ? <Text className="text-destructive" size="sm">{error}</Text> : null}
-            <Button fullWidth loading={submitting} onPress={submit}>Continue</Button>
-          </Card.Content>
-        </Card>
-        <Link href="/sign-up" asChild>
-          <Button variant="ghost">Create account</Button>
-        </Link>
+      )}
+    >
+      <View className="gap-1">
+        <Text size="2xl" weight="bold">Sign in</Text>
+        <Text muted size="sm">Use your email and password.</Text>
       </View>
-    </KeyboardAvoidingView>
+      <Input
+        label="Email"
+        size="lg"
+        variant="filled"
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        placeholder="you@example.com"
+        value={email}
+        onChangeText={setEmail}
+        accessibilityLabel="Email"
+        startContent={<Mail size={18} color={foreground} />}
+        interactiveContent={false}
+        disabled={submitting}
+      />
+      <Input
+        label="Password"
+        size="lg"
+        variant="filled"
+        autoComplete="current-password"
+        placeholder="8+ characters"
+        secureTextEntry={!showPassword}
+        value={password}
+        onChangeText={setPassword}
+        accessibilityLabel="Password"
+        onSubmitEditing={submit}
+        startContent={<LockKeyhole size={18} color={foreground} />}
+        endContent={(
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            hitSlop={10}
+            onPress={() => setShowPassword((value) => !value)}
+          >
+            {showPassword
+              ? <EyeOff size={18} color={foreground} />
+              : <Eye size={18} color={foreground} />}
+          </Pressable>
+        )}
+        disabled={submitting}
+      />
+      {error ? (
+        <View className="rounded-xl bg-destructive/10 px-3 py-2.5">
+          <Text className="text-destructive" size="sm">{error}</Text>
+        </View>
+      ) : null}
+      <Button fullWidth size="lg" loading={submitting} onPress={submit}>Continue</Button>
+    </AuthShell>
   );
 }

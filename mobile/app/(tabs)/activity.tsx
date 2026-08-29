@@ -4,6 +4,7 @@ import { usePaginatedQuery, useQuery } from 'convex/react';
 import { Button } from 'panelui-native/components/button';
 import { Card } from 'panelui-native/components/card';
 import { Text } from 'panelui-native/primitives/text';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ActivityRow } from '@/components/activity-row';
 import { LoadingState } from '@/components/loading-state';
@@ -11,6 +12,7 @@ import { RailActivityRow } from '@/components/rail-activity-row';
 import { api } from '@/lib/convex-api';
 
 export default function ActivityScreen() {
+  const insets = useSafeAreaInsets();
   const wallets = useQuery(api.wallets.list, {});
   const activeWallet = wallets?.contexts.find(
     (wallet) => wallet.accountId === wallets.activeAccountId,
@@ -38,7 +40,8 @@ export default function ActivityScreen() {
         data={transferResults}
         keyExtractor={(item) => item.publicId}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="mx-auto w-full max-w-2xl px-5 pb-28 pt-5"
+        contentContainerClassName="mx-auto w-full max-w-2xl px-5"
+        contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + 96 }}
         ListHeaderComponent={(
           <View className="mb-5 gap-4">
             <View>

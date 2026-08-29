@@ -8,12 +8,21 @@ export function Page({
   action,
   children,
   scroll = true,
-}: PropsWithChildren<{ title?: string; action?: ReactNode; scroll?: boolean }>) {
+  safeTop = false,
+}: PropsWithChildren<{
+  title?: string;
+  action?: ReactNode;
+  scroll?: boolean;
+  safeTop?: boolean;
+}>) {
   const insets = useSafeAreaInsets();
   const content = (
     <View
       className="w-full max-w-2xl self-center gap-5 px-5"
-      style={{ paddingTop: title ? 20 : insets.top + 16, paddingBottom: insets.bottom + 28 }}
+      style={{
+        paddingTop: (safeTop ? insets.top : 0) + 20,
+        paddingBottom: insets.bottom + 28,
+      }}
     >
       {title ? (
         <View className="flex-row items-center justify-between gap-3">
@@ -33,11 +42,11 @@ export function Page({
   return (
     <ScrollView
       className="flex-1 bg-background"
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
     >
       {content}
     </ScrollView>
   );
 }
-

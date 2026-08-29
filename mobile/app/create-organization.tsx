@@ -45,7 +45,7 @@ export default function CreateOrganizationScreen() {
   }
 
   return (
-    <Page title="New organization">
+    <Page>
       <Card>
         <Card.Content className="gap-4 pt-6">
           <Input

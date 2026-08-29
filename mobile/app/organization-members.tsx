@@ -34,10 +34,10 @@ export default function OrganizationMembersScreen() {
 
   if (wallets === undefined || (account && members === undefined)) return <LoadingState />;
   if (!account) {
-    return <Page title="Members"><MessageCard title="Organization not found" /></Page>;
+    return <Page><MessageCard title="Organization not found" /></Page>;
   }
   if (!canManageMembers(account.role)) {
-    return <Page title="Members"><MessageCard title="Member access is restricted" /></Page>;
+    return <Page><MessageCard title="Member access is restricted" /></Page>;
   }
   const selectedAccount = account;
 
@@ -64,7 +64,8 @@ export default function OrganizationMembersScreen() {
   }
 
   return (
-    <Page title={selectedAccount.name}>
+    <Page>
+      <Text muted size="sm">{selectedAccount.name}</Text>
       <View className="gap-2">
         <Text size="lg" weight="semibold">Members</Text>
         <Card className="overflow-hidden">

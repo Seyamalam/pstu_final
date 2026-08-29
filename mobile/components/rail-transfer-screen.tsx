@@ -125,7 +125,7 @@ export function RailTransferScreen({ direction }: { direction: RailDirection }) 
 
   if (active.role === 'viewer') {
     return (
-      <Page title={title}>
+      <Page>
         <MessageCard title="View-only wallet" />
         <Button variant="outline" fullWidth onPress={() => router.back()}>Back</Button>
       </Page>
@@ -134,7 +134,8 @@ export function RailTransferScreen({ direction }: { direction: RailDirection }) 
 
   if (completedBalance !== null) {
     return (
-      <Page title="Completed">
+      <Page>
+        <Text size="2xl" weight="bold">Completed</Text>
         <Card>
           <Card.Header>
             <Text muted>{direction === 'cash_in' ? 'Money added' : 'Money withdrawn'}</Text>
@@ -153,7 +154,8 @@ export function RailTransferScreen({ direction }: { direction: RailDirection }) 
 
   if (reviewing && provider && normalizedReference && amountPoisha) {
     return (
-      <Page title="Review">
+      <Page>
+        <Text size="2xl" weight="bold">Review</Text>
         <Card className="overflow-hidden">
           <Item>
             <Item.Content>
@@ -188,7 +190,7 @@ export function RailTransferScreen({ direction }: { direction: RailDirection }) 
   }
 
   return (
-    <Page title={title}>
+    <Page>
       <Card>
         <Card.Header>
           <Text weight="semibold">{active.name}</Text>

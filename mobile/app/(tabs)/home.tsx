@@ -28,7 +28,7 @@ export default function HomeScreen() {
   const canMoveMoney = active.role !== 'viewer';
 
   return (
-    <Page title={dashboard.user.displayName}>
+    <Page title={dashboard.user.displayName} safeTop>
       <WalletSwitcher wallets={wallets} />
 
       <Card className="overflow-hidden border-primary/20 bg-primary">

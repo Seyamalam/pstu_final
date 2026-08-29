@@ -6,9 +6,14 @@ export const instant = false;
 
 export const metadata: Metadata = {
   title: "Send money",
-  description: "Send fake BDT once with an idempotent payment intent.",
+  description: "Send money to a SheshHisab handle.",
 };
 
-export default function SendPage() {
-  return <SendFlow />;
+export default async function SendPage({
+  searchParams,
+}: PageProps<"/app/send">) {
+  const params = await searchParams;
+  const initialHandle =
+    typeof params.to === "string" ? params.to.trim().toLowerCase() : "";
+  return <SendFlow initialHandle={initialHandle} />;
 }

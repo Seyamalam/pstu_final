@@ -1,6 +1,8 @@
 "use client";
 
 import { usePaginatedQuery } from "convex/react";
+import { FileChartColumn } from "lucide-react";
+import Link from "next/link";
 import { ActivityList } from "@/components/app/activity-list";
 import {
   type ButtonState,
@@ -28,9 +30,17 @@ export function ActivityScreen() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <PageHeading
-        eyebrow="Ledger activity"
-        title="Every move, in order."
-        description="Sent and received transfers update live. Open a row to inspect its paired ledger entries."
+        eyebrow="Activity"
+        title="Money in and out"
+        action={
+          <Link
+            href="/app/statements"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <FileChartColumn aria-hidden="true" className="size-4" />
+            Statement
+          </Link>
+        }
       />
       <ActivityList
         title="All transfers"

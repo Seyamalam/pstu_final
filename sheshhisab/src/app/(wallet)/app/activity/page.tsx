@@ -6,7 +6,7 @@ export const instant = false;
 
 export const metadata: Metadata = {
   title: "Activity",
-  description: "Browse your sent and received fake-BDT transfers.",
+  description: "Browse sent and received transfers.",
 };
 
 export default function ActivityPage() {

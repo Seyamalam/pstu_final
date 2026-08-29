@@ -20,12 +20,12 @@ import { InlineError, PageHeading, ScreenLoading } from "./screen-states";
 type Receipt = FunctionReturnType<typeof api.transfers.send>;
 type SendStep = "details" | "review" | "success";
 
-export function SendFlow() {
+export function SendFlow({ initialHandle = "" }: { initialHandle?: string }) {
   const viewer = useQuery(api.viewer.get, {});
   const sendMoney = useMutation(api.transfers.send);
   const intentKeyRef = useRef<string | null>(null);
   const [step, setStep] = useState<SendStep>("details");
-  const [recipientQuery, setRecipientQuery] = useState("");
+  const [recipientQuery, setRecipientQuery] = useState(initialHandle);
   const [recipient, setRecipient] = useState<PersonSummary | null>(null);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -86,12 +86,7 @@ export function SendFlow() {
       setButtonState("success");
       setStep("success");
     } catch (error) {
-      setMessage(
-        errorMessage(
-          error,
-          "This payment did not commit. Your balance was not changed. Retry safely.",
-        ),
-      );
+      setMessage(errorMessage(error, "Payment failed. Try again."));
       setButtonState("error");
     }
   };
@@ -119,11 +114,7 @@ export function SendFlow() {
   if (step === "success" && receipt) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-        <PageHeading
-          eyebrow="Transfer complete"
-          title="Sent once. Recorded twice."
-          description="The debit and credit committed together. Open the receipt to inspect the zero-difference ledger proof."
-        />
+        <PageHeading eyebrow="Complete" title="Payment sent" />
         <section className="rounded-[1.75rem] bg-card p-6 text-center ring-1 ring-foreground/10 sm:p-8">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-primary text-primary-foreground">
             <CheckCircle2 aria-hidden="true" className="size-7" />
@@ -160,11 +151,7 @@ export function SendFlow() {
   if (step === "review" && recipient && amountPoisha !== null) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-        <PageHeading
-          eyebrow="Review payment"
-          title="Check every taka."
-          description="Confirm the person and amount. The payment only appears as sent after the database commits."
-        />
+        <PageHeading eyebrow="Payment" title="Review and confirm" />
         <section className="rounded-[1.75rem] bg-card p-5 ring-1 ring-foreground/10 sm:p-7">
           <dl className="flex flex-col gap-4">
             <div className="border-b border-border pb-4 text-center">
@@ -216,19 +203,15 @@ export function SendFlow() {
               size="lg"
               state={buttonState}
               onClick={() => void confirm()}
-              loadingText="Committing"
+              loadingText="Sending"
               successText="Sent"
-              errorText="Retry safely"
+              errorText="Try again"
               icon={<Send aria-hidden="true" className="size-4" />}
               className="flex-1"
             >
               Confirm and send
             </StatefulButton>
           </div>
-          <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
-            Retrying this review reuses the same payment key, so it cannot
-            double-charge you.
-          </p>
         </section>
       </div>
     );
@@ -239,7 +222,7 @@ export function SendFlow() {
       <PageHeading
         eyebrow="Send money"
         title="Who are you paying?"
-        description={`Available now: ${formatPoisha(viewer.account.balancePoisha)} in fake BDT.`}
+        description={`Available: ${formatPoisha(viewer.account.balancePoisha)}`}
       />
       <form
         onSubmit={review}

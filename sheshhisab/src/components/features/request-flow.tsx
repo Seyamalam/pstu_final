@@ -79,11 +79,7 @@ export function RequestFlow() {
   if (created) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-        <PageHeading
-          eyebrow="Request sent"
-          title="They can pay when ready."
-          description="The request is live in the payer's wallet. Money only moves if they accept it."
-        />
+        <PageHeading eyebrow="Complete" title="Request sent" />
         <section className="rounded-[1.75rem] bg-card p-6 text-center ring-1 ring-foreground/10 sm:p-8">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-primary text-primary-foreground">
             <CheckCircle2 aria-hidden="true" className="size-7" />
@@ -112,11 +108,7 @@ export function RequestFlow() {
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-      <PageHeading
-        eyebrow="Request money"
-        title="Who owes you?"
-        description="Ask for fake BDT with a clear amount and note. The payer stays in control."
-      />
+      <PageHeading eyebrow="Request money" title="Who owes you?" />
       <form
         onSubmit={submit}
         noValidate

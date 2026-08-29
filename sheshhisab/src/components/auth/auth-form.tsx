@@ -31,17 +31,16 @@ const HANDLE_PATTERN = /^[a-z0-9_]{3,24}$/;
 const modeCopy = {
   "sign-in": {
     eyebrow: "Welcome back",
-    title: "Pick up where you left off.",
-    description:
-      "Sign in to send, request, and settle fake BDT with confidence.",
+    title: "Sign in to your wallet",
+    description: "",
     submit: "Sign in",
     loading: "Signing in",
     success: "Signed in",
   },
   "sign-up": {
     eyebrow: "Create your wallet",
-    title: "Start with ৳100,000 in demo funds.",
-    description: "Choose a handle people can use to find you and settle up.",
+    title: "Choose your handle",
+    description: "",
     submit: "Create account",
     loading: "Creating account",
     success: "Account ready",
@@ -263,9 +262,11 @@ export function AuthForm() {
         >
           {copy.title}
         </h1>
-        <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-          {copy.description}
-        </p>
+        {copy.description ? (
+          <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+            {copy.description}
+          </p>
+        ) : null}
       </div>
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -396,11 +397,6 @@ export function AuthForm() {
           {copy.submit}
         </StatefulButton>
       </form>
-
-      <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">
-        This wallet uses simulated funds. No real money moves through
-        SheshHisab.
-      </p>
     </motion.section>
   );
 }

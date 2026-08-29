@@ -133,9 +133,8 @@ export function DashboardScreen() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-7">
       <PageHeading
-        eyebrow="Your wallet"
-        title={`Good to see you, ${dashboard.user.displayName}.`}
-        description="Send or request fake BDT, then open any transfer to inspect its balanced ledger proof."
+        eyebrow={`@${dashboard.user.handle}`}
+        title={`Hello, ${dashboard.user.displayName}.`}
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
@@ -182,7 +181,7 @@ export function DashboardScreen() {
                 Pending requests
               </h2>
               <p className="text-xs text-muted-foreground">
-                Requests waiting for your decision
+                Awaiting your decision
               </p>
             </div>
             <span className="rounded-full bg-muted px-2.5 py-1 font-mono text-xs font-semibold">
@@ -205,7 +204,7 @@ export function DashboardScreen() {
                 Nothing needs your attention.
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                New requests appear here in real time.
+                New requests appear here.
               </p>
             </div>
           )}

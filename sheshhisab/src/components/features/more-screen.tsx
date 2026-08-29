@@ -1,0 +1,35 @@
+import { ChevronRight, FileChartColumn, HandCoins, QrCode } from "lucide-react";
+import Link from "next/link";
+import { PageHeading } from "./screen-states";
+
+const actions = [
+  { href: "/app/request", label: "Request money", icon: HandCoins },
+  { href: "/app/statements", label: "Statements", icon: FileChartColumn },
+  { href: "/app/scan", label: "My payment QR", icon: QrCode },
+];
+
+export function MoreScreen() {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <PageHeading eyebrow="Wallet" title="More" />
+      <section className="overflow-hidden rounded-[1.5rem] bg-card ring-1 ring-foreground/10">
+        {actions.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex min-h-16 items-center gap-3 border-border px-4 outline-none transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&:not(:last-child)]:border-b"
+          >
+            <span className="grid size-10 place-items-center rounded-xl bg-muted text-primary">
+              <Icon aria-hidden="true" className="size-4" />
+            </span>
+            <span className="flex-1 text-sm font-medium">{label}</span>
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 text-muted-foreground"
+            />
+          </Link>
+        ))}
+      </section>
+    </div>
+  );
+}

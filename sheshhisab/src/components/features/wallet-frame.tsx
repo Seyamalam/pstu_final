@@ -2,12 +2,12 @@
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
-  ArrowDownUp,
-  FlaskConical,
-  HandCoins,
-  History,
-  LayoutDashboard,
+  ChartNoAxesColumnIncreasing,
+  House,
   LogOut,
+  MoreHorizontal,
+  ScanLine,
+  SendHorizontal,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import {
   useState,
 } from "react";
 import { type AppNavigationItem, AppShell } from "@/components/app/app-shell";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import {
   type ButtonState,
   StatefulButton,
@@ -122,7 +123,7 @@ function OnboardingForm({
           Name your wallet.
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          People will use your handle to send and request fake BDT.
+          People will use your handle to find you.
         </p>
 
         <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-3">
@@ -166,11 +167,15 @@ function OnboardingForm({
 
 function navigationForPath(pathname: string): AppNavigationItem[] {
   const items = [
-    { href: "/app", label: "Home", icon: LayoutDashboard },
-    { href: "/app/send", label: "Send", icon: ArrowDownUp },
-    { href: "/app/request", label: "Request", icon: HandCoins },
-    { href: "/app/activity", label: "Activity", icon: History },
-    { href: "/app/trust", label: "Trust", icon: FlaskConical },
+    { href: "/app", label: "Home", icon: House },
+    { href: "/app/send", label: "Pay", icon: SendHorizontal },
+    { href: "/app/scan", label: "Scan", icon: ScanLine },
+    {
+      href: "/app/activity",
+      label: "Activity",
+      icon: ChartNoAxesColumnIncreasing,
+    },
+    { href: "/app/more", label: "More", icon: MoreHorizontal },
   ];
 
   return items.map((item) => ({
@@ -261,7 +266,6 @@ export function WalletFrame({ children }: { children: ReactNode }) {
     <AppShell
       navigation={navigationForPath(pathname)}
       pageLabel={`@${viewer.user.handle}`}
-      announcement="Fake BDT only. No real money enters or leaves this wallet."
       headerActions={
         <>
           <span className="hidden items-center gap-2 sm:flex">
@@ -272,6 +276,7 @@ export function WalletFrame({ children }: { children: ReactNode }) {
               {viewer.user.displayName}
             </span>
           </span>
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => void signOut()}

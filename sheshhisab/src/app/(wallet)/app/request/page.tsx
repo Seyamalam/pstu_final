@@ -6,7 +6,7 @@ export const instant = false;
 
 export const metadata: Metadata = {
   title: "Request money",
-  description: "Request fake BDT from another SheshHisab wallet.",
+  description: "Request money from another SheshHisab wallet.",
 };
 
 export default function RequestPage() {

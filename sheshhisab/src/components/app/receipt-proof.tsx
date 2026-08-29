@@ -193,7 +193,7 @@ export function ReceiptProof({
           id="ledger-proof-heading"
           className="text-sm font-semibold text-foreground"
         >
-          Ledger proof
+          Payment entries
         </h2>
         <ol className="mt-3 flex flex-col gap-2">
           <LedgerEntry entry={debit} direction="debit" />

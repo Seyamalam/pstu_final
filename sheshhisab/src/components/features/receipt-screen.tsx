@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowLeft, History } from "lucide-react";
+import { ArrowLeft, Download, History } from "lucide-react";
 import Link from "next/link";
 import { ReceiptProof } from "@/components/app/receipt-proof";
 import { api } from "../../../convex/_generated/api";
@@ -19,9 +19,8 @@ export function ReceiptScreen({ publicId }: { publicId: string }) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <PageHeading
-        eyebrow="Transfer receipt"
-        title="One payment. Two entries."
-        description="This receipt is visible only to the sender and recipient. The paired ledger amounts prove what committed."
+        eyebrow="Receipt"
+        title="Payment complete"
         action={
           <Link
             href="/app/activity"
@@ -67,13 +66,23 @@ export function ReceiptScreen({ publicId }: { publicId: string }) {
             : "The ledger entries do not match. Do not treat this transfer as verified."
         }
         actions={
-          <Link
-            href="/app/activity"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <History aria-hidden="true" className="size-4" />
-            Back to activity
-          </Link>
+          <div className="flex flex-wrap gap-2" data-print-hidden="true">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Download aria-hidden="true" className="size-4" />
+              Save PDF
+            </button>
+            <Link
+              href="/app/activity"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <History aria-hidden="true" className="size-4" />
+              Activity
+            </Link>
+          </div>
         }
       />
     </div>

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { type ReactNode, Suspense } from "react";
-import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
-import { getToken } from "@/lib/auth-server";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,31 +22,26 @@ export const metadata: Metadata = {
     template: "%s · SheshHisab",
   },
   description:
-    "A fast, trustworthy fake-money wallet for sending, requesting, and proving every taka balances.",
+    "Send, request, scan, and track every taka from one fast wallet.",
+  manifest: "/manifest.webmanifest",
 };
 
-async function AuthenticatedProvider({ children }: { children: ReactNode }) {
-  const token = await getToken();
-
-  return (
-    <ConvexClientProvider initialToken={token}>{children}</ConvexClientProvider>
-  );
-}
+const themeScript = `(() => { try { const saved = localStorage.getItem('sheshhisab.theme'); const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.classList.toggle('dark', dark); document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; } catch {} })();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <Suspense
-          fallback={<ConvexClientProvider>{children}</ConvexClientProvider>}
-        >
-          <AuthenticatedProvider>{children}</AuthenticatedProvider>
-        </Suspense>
-      </body>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+      </head>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

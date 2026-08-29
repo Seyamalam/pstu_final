@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -12,10 +13,16 @@ function BrandMark() {
   return (
     <span
       aria-hidden="true"
-      className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-sm"
+      className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-[0.9rem] bg-primary text-primary-foreground shadow-sm"
     >
-      <span className="font-mono text-xl font-semibold leading-none">৳</span>
-      <span className="absolute inset-x-2 bottom-1.5 h-px bg-primary-foreground/45" />
+      <Image
+        src="/brand-mark.png"
+        alt=""
+        width={40}
+        height={40}
+        priority
+        className="size-10 object-cover"
+      />
     </span>
   );
 }

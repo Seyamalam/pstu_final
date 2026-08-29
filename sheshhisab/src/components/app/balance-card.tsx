@@ -22,7 +22,7 @@ export function BalanceCard({
   accountName,
   accountHandle,
   label = "Available balance",
-  fundsLabel = "Simulated funds",
+  fundsLabel = "BDT",
   hidden = false,
   actions,
   status,

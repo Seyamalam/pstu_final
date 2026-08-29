@@ -36,8 +36,8 @@
 - [x] Pass native types, unit tests, Expo Doctor, and production export/build.
 - [x] Pass Convex code generation and backend edge-case tests.
 - [x] Capture eight web/native release screenshots.
-- [ ] Replay the signed Android registration regression on an emulator.
-- [ ] Build and inspect the signed release APK locally.
+- [x] Replay the signed Android registration regression on an emulator.
+- [x] Build and inspect the signed release APK locally.
 - [x] Deploy Convex development, Convex production, and Vercel production.
 - [x] Send through the production Brevo relay and verify receipt in the destination inbox.
 
@@ -99,6 +99,6 @@ These checks require a real iOS or Android device and should be completed before
 - [x] GitHub `main` matches the deployed source.
 - [x] No secret or local environment file is tracked.
 - [x] Web and native setup commands are documented.
-- [ ] Publish the signed APK through GitHub Releases.
-- [ ] Link the APK, production app, screenshots, and project documents from the root README.
-- [ ] Stop feature development at the submission freeze.
+- [x] Publish the signed APK through GitHub Releases.
+- [x] Link the APK, production app, screenshots, and project documents from the root README.
+- [x] Stop feature development at the submission freeze.

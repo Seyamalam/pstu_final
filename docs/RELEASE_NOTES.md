@@ -26,3 +26,5 @@
 - Production landing, authentication endpoint, payment-link redirect, and security headers.
 
 The APK is built locally with EAS CLI and the configured Android release keystore. No GitHub Actions workflow is used.
+
+SHA-256: `b88472c55d901a12c4892938f3642d46102cd760782505f1de3fc978cdc6fee2`

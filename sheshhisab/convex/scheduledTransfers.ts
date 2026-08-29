@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
@@ -12,7 +12,7 @@ import {
   normalizeNote,
 } from "./lib/money";
 import { limitFeatureCreation } from "./lib/rateLimits";
-import { commitTransfer } from "./lib/transfers";
+import { commitTransfer, getAccountForUser } from "./lib/transfers";
 import {
   getActiveWalletAccess,
   getMembership,
@@ -22,6 +22,18 @@ import {
 const MIN_SCHEDULE_DELAY_MS = 60_000;
 const MAX_SCHEDULE_AHEAD_MS = 366 * 24 * 60 * 60 * 1_000;
 const MAX_PENDING_SCHEDULES = 25;
+const EXPECTED_EXECUTION_FAILURES = new Set([
+  "INVALID_AMOUNT",
+  "AMOUNT_TOO_LARGE",
+  "INSUFFICIENT_FUNDS",
+  "ACCOUNT_LIMIT",
+  "SELF_TRANSFER",
+  "SAME_ACCOUNT",
+  "IDEMPOTENCY_CONFLICT",
+  "INVALID_CATEGORY",
+  "NOTE_TOO_LONG",
+  "ACCOUNT_NOT_FOUND",
+]);
 
 const statusValidator = v.union(
   v.literal("pending"),
@@ -263,6 +275,43 @@ export const cancel = mutation({
   },
 });
 
+export const performExecutionTransfer = internalMutation({
+  args: { scheduledTransferId: v.id("scheduledTransfers") },
+  returns: v.object({ transferId: v.id("transfers"), createdAt: v.number() }),
+  handler: async (ctx, args) => {
+    const scheduled = await ctx.db.get(
+      "scheduledTransfers",
+      args.scheduledTransferId,
+    );
+    if (!scheduled || scheduled.status !== "pending") {
+      fail("INVALID_SCHEDULE_STATE", "Schedule is no longer pending.");
+    }
+    const [creator, sourceAccount, recipient] = await Promise.all([
+      ctx.db.get("users", scheduled.creatorUserId),
+      ctx.db.get("accounts", scheduled.sourceAccountId),
+      ctx.db.get("users", scheduled.recipientUserId),
+    ]);
+    if (!creator || !sourceAccount || !recipient) {
+      fail("ACCOUNT_NOT_FOUND", "Scheduled transfer data is unavailable.");
+    }
+    const recipientAccount = await getAccountForUser(ctx, recipient._id);
+    if (sourceAccount._id === recipientAccount._id) {
+      fail("SAME_ACCOUNT", "Source and recipient wallets must differ.");
+    }
+    const receipt = await commitTransfer(ctx, {
+      sender: creator,
+      senderAccount: sourceAccount,
+      recipient,
+      recipientAccount,
+      amountPoisha: scheduled.amountPoisha,
+      note: scheduled.note,
+      category: scheduled.category,
+      idempotencyKey: `schedule:${String(scheduled._id)}`,
+    });
+    return { transferId: receipt.transferId, createdAt: receipt.createdAt };
+  },
+});
+
 export const execute = internalMutation({
   args: { scheduledTransferId: v.id("scheduledTransfers") },
   returns: v.null(),
@@ -301,23 +350,29 @@ export const execute = internalMutation({
       });
       return null;
     }
-    if (sourceAccount.balancePoisha < scheduled.amountPoisha) {
+    let receipt: { transferId: Id<"transfers">; createdAt: number };
+    try {
+      receipt = await ctx.runMutation(
+        internal.scheduledTransfers.performExecutionTransfer,
+        { scheduledTransferId: scheduled._id },
+      );
+    } catch (error) {
+      const code =
+        error instanceof ConvexError &&
+        typeof error.data === "object" &&
+        error.data !== null &&
+        "code" in error.data &&
+        typeof error.data.code === "string"
+          ? error.data.code
+          : null;
+      if (!code || !EXPECTED_EXECUTION_FAILURES.has(code)) throw error;
       await ctx.db.patch("scheduledTransfers", scheduled._id, {
         status: "failed",
-        failureCode: "INSUFFICIENT_FUNDS",
+        failureCode: code,
         resolvedAt,
       });
       return null;
     }
-    const receipt = await commitTransfer(ctx, {
-      sender: creator,
-      senderAccount: sourceAccount,
-      recipient,
-      amountPoisha: scheduled.amountPoisha,
-      note: scheduled.note,
-      category: scheduled.category,
-      idempotencyKey: `schedule:${String(scheduled._id)}`,
-    });
     await ctx.db.patch("scheduledTransfers", scheduled._id, {
       status: "completed",
       transferId: receipt.transferId,

@@ -222,6 +222,39 @@ describe("scheduled transfers and budgets", () => {
     expect(state.transfers).toHaveLength(0);
   });
 
+  it("terminally fails a due transfer when the recipient is at its balance limit", async () => {
+    const t = makeTest();
+    const alice = await seedWallet(t, "alice_1");
+    const bob = await seedWallet(t, "bob_22");
+    const scheduledTransferId = await t.run(async (ctx) => {
+      await ctx.db.patch("accounts", bob.accountId, {
+        balancePoisha: 9_223_372_036_854_775_807n,
+      });
+      return await ctx.db.insert("scheduledTransfers", {
+        creatorUserId: alice.userId,
+        sourceAccountId: alice.accountId,
+        recipientUserId: bob.userId,
+        amountPoisha: 1n,
+        executeAt: Date.now() - 1,
+        idempotencyKey: "due-recipient-limit-key",
+        status: "pending",
+        createdAt: Date.now() - 10_000,
+      });
+    });
+    await t.mutation(internal.scheduledTransfers.execute, {
+      scheduledTransferId,
+    });
+    const state = await t.run(async (ctx) => ({
+      scheduled: await ctx.db.get("scheduledTransfers", scheduledTransferId),
+      transfers: await ctx.db.query("transfers").take(2),
+    }));
+    expect(state.scheduled).toMatchObject({
+      status: "failed",
+      failureCode: "ACCOUNT_LIMIT",
+    });
+    expect(state.transfers).toHaveLength(0);
+  });
+
   it("tracks categorized spending atomically", async () => {
     const t = makeTest();
     const alice = await seedWallet(t, "alice_1");

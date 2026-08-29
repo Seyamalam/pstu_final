@@ -35,6 +35,7 @@ import type * as rails from "../rails.js";
 import type * as receipts from "../receipts.js";
 import type * as requests from "../requests.js";
 import type * as scheduledTransfers from "../scheduledTransfers.js";
+import type * as splitBills from "../splitBills.js";
 import type * as statements from "../statements.js";
 import type * as transfers from "../transfers.js";
 import type * as users from "../users.js";
@@ -75,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   receipts: typeof receipts;
   requests: typeof requests;
   scheduledTransfers: typeof scheduledTransfers;
+  splitBills: typeof splitBills;
   statements: typeof statements;
   transfers: typeof transfers;
   users: typeof users;

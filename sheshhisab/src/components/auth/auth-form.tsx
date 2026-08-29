@@ -219,7 +219,7 @@ export function AuthForm() {
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       aria-labelledby="auth-title"
       className={cn(
-        "w-full justify-self-end rounded-[1.75rem] border border-foreground/10 bg-card p-5 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] transition-[max-width] duration-300 sm:p-6",
+        "w-full justify-self-end rounded-[1.75rem] border border-foreground/10 bg-card p-4 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] transition-[max-width] duration-300 sm:p-6",
         mode === "sign-up" ? "max-w-xl" : "max-w-md",
       )}
     >
@@ -259,7 +259,7 @@ export function AuthForm() {
         </div>
       </fieldset>
 
-      <div className="pb-5 pt-6">
+      <div className="pb-4 pt-5 sm:pb-5 sm:pt-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           {copy.eyebrow}
         </p>
@@ -276,9 +276,16 @@ export function AuthForm() {
         ) : null}
       </div>
 
-      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <form
+        noValidate
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-2.5 sm:gap-3"
+      >
         <div
-          className={cn("grid gap-3", mode === "sign-up" && "sm:grid-cols-2")}
+          className={cn(
+            "grid gap-2.5 sm:gap-3",
+            mode === "sign-up" && "sm:grid-cols-2",
+          )}
         >
           <AnimatePresence initial={false} mode="popLayout">
             {mode === "sign-up" ? (
@@ -296,7 +303,7 @@ export function AuthForm() {
                     : { opacity: 0, height: 0, y: -8 }
                 }
                 transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                className="grid gap-3 overflow-hidden sm:col-span-2 sm:grid-cols-2"
+                className="grid gap-2.5 overflow-hidden sm:col-span-2 sm:grid-cols-2 sm:gap-3"
               >
                 <Input
                   id="display-name"

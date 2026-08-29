@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-svh w-full flex-1 flex-col px-4 py-5 sm:px-6 sm:py-7">
+    <main className="flex min-h-svh w-full flex-1 flex-col px-4 py-3 sm:px-6 sm:py-7">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <Brand href="/" />
       </header>
 
-      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-8 lg:grid-cols-[minmax(0,1fr)_36rem] lg:py-12">
+      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-4 sm:py-8 lg:grid-cols-[minmax(0,1fr)_36rem] lg:py-12">
         <section
           className="hidden max-w-xl lg:block"
           aria-labelledby="auth-promise"

@@ -10,10 +10,12 @@ import { Item } from 'panelui-native/components/item';
 import { Text } from 'panelui-native/primitives/text';
 
 import { Page } from '@/components/page';
+import { RecipientShortcuts } from '@/components/recipient-shortcuts';
 import { SuccessState } from '@/components/success-state';
 import { api } from '@/lib/convex-api';
 import { formatMoney, parseTakaToPoisha } from '@/lib/format';
 import { paymentFingerprint, paymentIntent, type PaymentIntent } from '@/lib/payment-intent';
+import { uniqueRecentRecipients } from '@/lib/recipient-state';
 
 export default function RequestMoneyScreen() {
   const [payer, setPayer] = useState('');
@@ -24,12 +26,20 @@ export default function RequestMoneyScreen() {
   const [error, setError] = useState<string | null>(null);
   const intentRef = useRef<PaymentIntent | null>(null);
   const create = useMutation(api.requests.create);
+  const dashboard = useQuery(api.dashboard.get, {});
+  const favorites = useQuery(api.favorites.list, { limit: 20 });
   const normalizedPayer = payer.trim().replace(/^@/, '').toLowerCase();
   const amountPoisha = useMemo(() => parseTakaToPoisha(amount), [amount]);
   const search = useQuery(
     api.users.search,
     /^[a-z0-9_]{1,24}$/.test(normalizedPayer) ? { handlePrefix: normalizedPayer } : 'skip',
   );
+  const recentRecipients = dashboard
+    ? uniqueRecentRecipients(
+      dashboard.recentActivity.map((entry) => entry.counterparty),
+      dashboard.user.handle,
+    )
+    : [];
 
   async function submit() {
     setError(null);
@@ -78,6 +88,11 @@ export default function RequestMoneyScreen() {
     <Page title="Request money">
       <Card>
         <Card.Content className="gap-4 pt-6">
+          <RecipientShortcuts
+            favorites={favorites?.map((favorite) => favorite.recipient) ?? []}
+            recent={recentRecipients}
+            onSelect={(user) => setPayer(user.handle)}
+          />
           <Input
             value={payer}
             onChangeText={setPayer}

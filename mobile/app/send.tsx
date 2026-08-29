@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery } from 'convex/react';
 import { Card } from 'panelui-native/components/card';
+import { Button } from 'panelui-native/components/button';
 import { Input } from 'panelui-native/components/input';
 import { Item } from 'panelui-native/components/item';
 import { SlideButton } from 'panelui-native/components/slide-button';
@@ -11,6 +12,7 @@ import { Text } from 'panelui-native/primitives/text';
 
 import { LoadingState } from '@/components/loading-state';
 import { Page } from '@/components/page';
+import { RecipientShortcuts } from '@/components/recipient-shortcuts';
 import { confirmPayment } from '@/lib/biometrics';
 import { api } from '@/lib/convex-api';
 import { formatMoney, parseTakaToPoisha } from '@/lib/format';
@@ -19,6 +21,7 @@ import {
   paymentIntent,
   type PaymentIntent,
 } from '@/lib/payment-intent';
+import { isFavoriteHandle, uniqueRecentRecipients } from '@/lib/recipient-state';
 
 export default function SendScreen() {
   const params = useLocalSearchParams<{ recipient?: string; amount?: string; note?: string }>();
@@ -32,6 +35,7 @@ export default function SendScreen() {
   const [submitting, setSubmitting] = useState(false);
   const intentRef = useRef<PaymentIntent | null>(null);
   const dashboard = useQuery(api.dashboard.get, {});
+  const favorites = useQuery(api.favorites.list, { limit: 20 });
   const normalizedRecipient = recipient.trim().replace(/^@/, '').toLowerCase();
   const search = useQuery(
     api.users.search,
@@ -40,10 +44,21 @@ export default function SendScreen() {
       : 'skip',
   );
   const send = useMutation(api.transfers.send);
+  const toggleFavorite = useMutation(api.favorites.toggle);
   const amountPoisha = useMemo(() => parseTakaToPoisha(amount), [amount]);
 
   if (dashboard === undefined) return <LoadingState />;
   const currentDashboard = dashboard;
+  const recentRecipients = uniqueRecentRecipients(
+    currentDashboard.recentActivity.map((entry) => entry.counterparty),
+    currentDashboard.user.handle,
+  );
+  const favoriteRecipients = favorites?.map((favorite) => favorite.recipient) ?? [];
+  const selectedRecipient = [
+    ...favoriteRecipients,
+    ...recentRecipients,
+    ...(search ?? []),
+  ].find((user) => user.handle === normalizedRecipient);
 
   async function submit() {
     setError(null);
@@ -99,10 +114,25 @@ export default function SendScreen() {
     }
   }
 
+  async function toggleSelectedFavorite() {
+    if (!selectedRecipient) return;
+    setError(null);
+    try {
+      await toggleFavorite({ recipientHandle: selectedRecipient.handle });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not update favorite.');
+    }
+  }
+
   return (
     <Page>
       <Card>
         <Card.Content className="gap-4 pt-6">
+          <RecipientShortcuts
+            favorites={favoriteRecipients}
+            recent={recentRecipients}
+            onSelect={(user) => setRecipient(user.handle)}
+          />
           <Input
             autoCapitalize="none"
             autoCorrect={false}
@@ -149,6 +179,18 @@ export default function SendScreen() {
             <Text muted>Available</Text>
             <Text weight="semibold">{formatMoney(currentDashboard.account.balancePoisha)}</Text>
           </View>
+          {selectedRecipient ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="min-h-12"
+              onPress={() => void toggleSelectedFavorite()}
+            >
+              {isFavoriteHandle(favorites ?? [], selectedRecipient.handle)
+                ? 'Remove favorite'
+                : 'Add favorite'}
+            </Button>
+          ) : null}
         </Card.Content>
       </Card>
       {error ? <Text className="text-destructive" size="sm">{error}</Text> : null}

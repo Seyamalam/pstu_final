@@ -84,6 +84,8 @@ function Navigation() {
           <Stack.Screen name="request-money" options={{ title: 'Request money' }} />
           <Stack.Screen name="request-code" options={{ title: 'Request QR' }} />
           <Stack.Screen name="request/[request-id]" options={{ title: 'Request' }} />
+          <Stack.Screen name="scheduled-transfers" options={{ title: 'Scheduled' }} />
+          <Stack.Screen name="schedule-transfer" options={{ title: 'Schedule transfer' }} />
           <Stack.Screen name="receipt/[public-id]" options={{ title: 'Receipt' }} />
           <Stack.Screen name="statements" options={{ title: 'Statements' }} />
         </Stack.Protected>

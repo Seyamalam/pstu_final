@@ -15,7 +15,7 @@ export default function LoginPage() {
         <Brand href="/" />
       </header>
 
-      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_28rem] lg:py-14">
+      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-8 lg:grid-cols-[minmax(0,1fr)_36rem] lg:py-12">
         <section
           className="hidden max-w-xl lg:block"
           aria-labelledby="auth-promise"

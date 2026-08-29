@@ -218,7 +218,10 @@ export function AuthForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       aria-labelledby="auth-title"
-      className="w-full max-w-md rounded-[1.75rem] border border-foreground/10 bg-card p-5 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] sm:p-7"
+      className={cn(
+        "w-full justify-self-end rounded-[1.75rem] border border-foreground/10 bg-card p-5 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] transition-[max-width] duration-300 sm:p-6",
+        mode === "sign-up" ? "max-w-xl" : "max-w-md",
+      )}
     >
       <fieldset>
         <legend className="sr-only">Choose how to continue</legend>
@@ -256,7 +259,7 @@ export function AuthForm() {
         </div>
       </fieldset>
 
-      <div className="pb-6 pt-7">
+      <div className="pb-5 pt-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           {copy.eyebrow}
         </p>
@@ -274,104 +277,108 @@ export function AuthForm() {
       </div>
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <AnimatePresence initial={false} mode="popLayout">
-          {mode === "sign-up" ? (
-            <motion.div
-              key="profile-fields"
-              initial={
-                reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -8 }
-              }
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={
-                reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -8 }
-              }
-              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-3 overflow-hidden"
-            >
-              <Input
-                id="display-name"
-                label="Display name"
-                name="name"
-                value={fields.displayName}
-                onChange={(value) => updateField("displayName", value)}
-                onBlur={() => touchField("displayName")}
-                error={touched.displayName ? errors.displayName : undefined}
-                success={Boolean(touched.displayName && !errors.displayName)}
-                reserveErrorLine
-                autoComplete="name"
-                placeholder="Sadia Rahman"
-                leftIcon={<UserRound aria-hidden />}
-              />
-              <Input
-                id="handle"
-                label="Handle"
-                name="handle"
-                value={fields.handle}
-                onChange={(value) => updateField("handle", value)}
-                onBlur={() => touchField("handle")}
-                error={touched.handle ? errors.handle : undefined}
-                success={Boolean(touched.handle && !errors.handle)}
-                reserveErrorLine
-                autoCapitalize="none"
-                autoComplete="nickname"
-                spellCheck={false}
-                placeholder="sadia_24"
-                leftIcon={<AtSign aria-hidden />}
-              />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+        <div
+          className={cn("grid gap-3", mode === "sign-up" && "sm:grid-cols-2")}
+        >
+          <AnimatePresence initial={false} mode="popLayout">
+            {mode === "sign-up" ? (
+              <motion.div
+                key="profile-fields"
+                initial={
+                  reduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, height: 0, y: -8 }
+                }
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={
+                  reduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, height: 0, y: -8 }
+                }
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="grid gap-3 overflow-hidden sm:col-span-2 sm:grid-cols-2"
+              >
+                <Input
+                  id="display-name"
+                  label="Display name"
+                  name="name"
+                  value={fields.displayName}
+                  onChange={(value) => updateField("displayName", value)}
+                  onBlur={() => touchField("displayName")}
+                  error={touched.displayName ? errors.displayName : undefined}
+                  success={Boolean(touched.displayName && !errors.displayName)}
+                  autoComplete="name"
+                  placeholder="Sadia Rahman"
+                  leftIcon={<UserRound aria-hidden />}
+                />
+                <Input
+                  id="handle"
+                  label="Handle"
+                  name="handle"
+                  value={fields.handle}
+                  onChange={(value) => updateField("handle", value)}
+                  onBlur={() => touchField("handle")}
+                  error={touched.handle ? errors.handle : undefined}
+                  success={Boolean(touched.handle && !errors.handle)}
+                  autoCapitalize="none"
+                  autoComplete="nickname"
+                  spellCheck={false}
+                  placeholder="sadia_24"
+                  leftIcon={<AtSign aria-hidden />}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
-        <Input
-          id="email"
-          label="Email"
-          name="email"
-          type="email"
-          value={fields.email}
-          onChange={(value) => updateField("email", value)}
-          onBlur={() => touchField("email")}
-          error={touched.email ? errors.email : undefined}
-          success={Boolean(touched.email && !errors.email)}
-          reserveErrorLine
-          autoCapitalize="none"
-          autoComplete="email"
-          inputMode="email"
-          spellCheck={false}
-          placeholder="you@example.com"
-          leftIcon={<Mail aria-hidden />}
-        />
+          <Input
+            id="email"
+            label="Email"
+            name="email"
+            type="email"
+            value={fields.email}
+            onChange={(value) => updateField("email", value)}
+            onBlur={() => touchField("email")}
+            error={touched.email ? errors.email : undefined}
+            success={Boolean(touched.email && !errors.email)}
+            autoCapitalize="none"
+            autoComplete="email"
+            inputMode="email"
+            spellCheck={false}
+            placeholder="you@example.com"
+            leftIcon={<Mail aria-hidden />}
+          />
 
-        <Input
-          id="password"
-          label="Password"
-          name="password"
-          type={showPassword ? "text" : "password"}
-          value={fields.password}
-          onChange={(value) => updateField("password", value)}
-          onBlur={() => touchField("password")}
-          error={touched.password ? errors.password : undefined}
-          success={Boolean(touched.password && !errors.password)}
-          reserveErrorLine
-          autoComplete={
-            mode === "sign-up" ? "new-password" : "current-password"
-          }
-          placeholder={
-            mode === "sign-up" ? "At least 8 characters" : "Your password"
-          }
-          leftIcon={<LockKeyhole aria-hidden />}
-          rightIcon={
-            <button
-              type="button"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-              onClick={() => setShowPassword((current) => !current)}
-            >
-              {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
-            </button>
-          }
-        />
+          <Input
+            id="password"
+            label="Password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={fields.password}
+            onChange={(value) => updateField("password", value)}
+            onBlur={() => touchField("password")}
+            error={touched.password ? errors.password : undefined}
+            success={Boolean(touched.password && !errors.password)}
+            autoComplete={
+              mode === "sign-up" ? "new-password" : "current-password"
+            }
+            placeholder={
+              mode === "sign-up" ? "At least 8 characters" : "Your password"
+            }
+            leftIcon={<LockKeyhole aria-hidden />}
+            rightIcon={
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((current) => !current)}
+              >
+                {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+              </button>
+            }
+          />
+        </div>
 
-        <div className="min-h-10 pt-0.5" aria-live="polite">
+        <div className="pt-0.5" aria-live="polite">
           <AnimatePresence initial={false}>
             {generalError ? (
               <motion.p

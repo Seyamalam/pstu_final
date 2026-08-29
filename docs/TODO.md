@@ -6,23 +6,26 @@
 
 - [ ] Add favorite and recent recipients to web and native Send flows.
 - [ ] Add amount- and note-prefilled QR payment requests and share links.
-- [ ] Add a complete native request-money lifecycle.
-- [ ] Add notification inboxes with unread, read, and read-all states.
-- [ ] Add organization creation, switching, membership, and audit history on web.
-- [ ] Add simulated MFS, bank, and card rails on web.
-- [ ] Add organization member removal with server-side role enforcement.
-- [ ] Add scheduled transfers with cancellation and retry-safe execution.
+- [x] Add a complete native request-money lifecycle.
+- [x] Add notification inboxes with unread, read, and read-all states.
+- [x] Add organization creation, switching, and membership on web.
+- [ ] Expose organization audit history on web.
+- [x] Add simulated MFS, bank, and card rails on web.
+- [x] Add organization member removal with server-side role enforcement.
+- [x] Add scheduled-transfer backend support with cancellation and retry-safe execution.
+- [ ] Finish scheduled-transfer surfaces on web and native.
 - [ ] Add split bills with explicit contribution and settlement states.
-- [ ] Add lightweight category budgets and progress views.
+- [x] Add atomic category-budget backend support.
+- [ ] Finish category-budget progress views on web and native.
 - [ ] Add password recovery and email verification when delivery credentials are configured.
 
 ### Experience and motion
 
 - [ ] Standardize hierarchical, modal, and tab transitions across both clients.
-- [ ] Add skeleton-to-content handoffs for wallet data.
-- [ ] Add restrained payment success feedback and native haptics.
-- [ ] Add clear QR detection, success, and failure feedback.
-- [ ] Add continuity when switching personal and organization wallets.
+- [x] Add initial skeleton-to-content handoffs for wallet data.
+- [x] Add restrained payment success feedback and native haptics.
+- [x] Add clear QR detection, success, and failure feedback.
+- [x] Add continuity when switching personal and organization wallets.
 - [ ] Polish loading, empty, offline, validation, and permission-denied states.
 - [ ] Verify dark mode, large text, keyboard safety, reduced motion, and screen readers.
 - [ ] Profile the native release build and remove motion that misses frame targets.

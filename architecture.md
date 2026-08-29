@@ -64,6 +64,9 @@ Convex is the domain boundary:
 - applies wallet-role permissions;
 - validates balances, limits, state transitions, and idempotency;
 - commits balances, transfer records, ledger entries, and inbox events atomically;
+- schedules future transfers and re-checks access and funds at execution time;
+- tracks category spending inside the same transaction as a categorized payment;
+- records immutable organization membership audit events;
 - serves indexed real-time queries to both clients;
 - stores and revokes notification endpoints.
 
@@ -115,6 +118,10 @@ erDiagram
     EXTERNAL_RAIL_TRANSACTIONS ||--|| EXTERNAL_RAIL_LEDGER_ENTRIES : posts
     USERS ||--o{ NOTIFICATION_ENDPOINTS : registers
     USERS ||--o{ NOTIFICATION_INBOX : receives
+    USERS ||--o{ FAVORITE_RECIPIENTS : saves
+    ACCOUNTS ||--o{ SCHEDULED_TRANSFERS : funds
+    ACCOUNTS ||--o{ BUDGETS : controls
+    ACCOUNTS ||--o{ ORGANIZATION_AUDIT_EVENTS : records
 
     USERS {
       string tokenIdentifier
@@ -130,6 +137,7 @@ erDiagram
       string publicId
       string idempotencyKey
       int64 amountPoisha
+      string category
     }
     LEDGER_ENTRIES {
       string direction
@@ -142,6 +150,17 @@ erDiagram
     }
     WALLET_MEMBERSHIPS {
       string role
+    }
+    SCHEDULED_TRANSFERS {
+      int64 amountPoisha
+      number executeAt
+      string status
+      string idempotencyKey
+    }
+    BUDGETS {
+      string category
+      int64 limitPoisha
+      int64 spentPoisha
     }
 ```
 
@@ -172,6 +191,9 @@ Client-side disabled buttons improve usability, but the Convex function repeats 
 6. External rails produce their own immutable transaction and ledger records.
 7. Raw MFS, bank, and card references are not stored; only a masked value and keyed fingerprint are persisted.
 8. Receipt lookup returns data only to an authorized transfer participant.
+9. Scheduled execution re-checks wallet access and available funds immediately before transfer.
+10. Categorized spend updates its active budget in the same mutation as the ledger write.
+11. Organization membership changes append audit events that normal product operations never rewrite.
 
 ## Read path and scaling
 
@@ -189,6 +211,7 @@ flowchart LR
 - Receipts use a public-ID index plus participant authorization.
 - Memberships and organization roles use compound indexes.
 - Rail history and ledger reads are scoped by account and creation time.
+- Favorites, schedules, budgets, inbox state, and organization audit reads begin from compound indexes.
 - Limits prevent unbounded lists and oversized organization membership sets.
 
 Ten million users do not require ten million records to be scanned; the hot paths begin from an authenticated user, handle, public ID, account ID, or compound index.

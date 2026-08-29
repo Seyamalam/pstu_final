@@ -9,6 +9,8 @@ SheshHisab is a closed-loop BDT wallet with a responsive Next.js PWA and an Expo
 - BDT personal wallet with an opening balance
 - Send money by handle with an optional note
 - Request money and accept, decline, or cancel a request
+- Retry-safe request creation and payment acceptance
+- Favorite recipients for fast repeat payments
 - Search users by normalized handle
 - Real-time balances and activity through Convex subscriptions
 - Stable payment receipts with public receipt IDs
@@ -24,6 +26,7 @@ SheshHisab is a closed-loop BDT wallet with a responsive Next.js PWA and an Expo
 - Manual handle or QR-link fallback on web
 - Strict QR payload and allowed-origin validation
 - Scanned recipient handoff directly into the Send flow
+- Amount- and note-prefilled request QR codes in the native app
 
 ## Activity, receipts, and insights
 
@@ -45,8 +48,9 @@ SheshHisab is a closed-loop BDT wallet with a responsive Next.js PWA and an Expo
 - Role-aware payment and member-management permissions
 - Add or update members by handle
 - Member and wallet limits enforced by the backend
+- Member removal with owner/admin rules and an immutable organization audit trail
 
-Organization management is currently exposed in the native app. The data model and authorization live in the shared backend, so a web surface can be added without changing the ledger.
+Organization creation, switching, and member management are available on both clients. Audit history is enforced and queryable in the shared backend.
 
 ## Simulated Bangladesh money rails
 
@@ -57,16 +61,25 @@ Organization management is currently exposed in the native app. The data model a
 - Per-operation idempotency, wallet balance caps, and daily rail limits
 - Dedicated external-rail transaction and ledger records
 
-These rails are deliberately simulated; no real bank, MFS, or card network is contacted.
+These rails are available on both clients and are deliberately simulated; no real bank, MFS, or card network is contacted.
+
+## Planning and controls
+
+- Scheduled transfers with server-side execution, cancellation, access re-checks, and retry safety
+- Category budgets with atomic spend tracking on categorized transfers
+- Bounded favorite-recipient lists
+- Organization membership audit events
 
 ## Native app
 
 - Expo SDK 57 and React Native 0.86
 - PanelUI components with native-thread loading animation and reduced-motion handling
-- Native bottom tabs for Home, Activity, Scan, and Settings
+- Native bottom tabs for Home, Activity, Scan, Inbox, and Settings
 - Safe-area-aware phone layouts
 - Biometric or device-credential confirmation before sends and withdrawals
 - Native push-notification registration and notification deep links
+- Native notification inbox with unread and read-all states
+- Native request creation, request QR sharing, and request settlement
 - Light and dark themes
 - Shareable PDF documents
 - Two-step first-run onboarding
@@ -77,6 +90,9 @@ These rails are deliberately simulated; no real bank, MFS, or card network is co
 - Responsive desktop and bottom-tab mobile layouts
 - Installable manifest and service worker
 - Web Push subscription management
+- Web notification inbox with unread states
+- Web personal/organization wallet switching and member management
+- Web simulated MFS, bank, and card rails
 - Camera QR scanning where the browser supports `BarcodeDetector`
 - Light and dark themes
 - Native View Transition styling with reduced-motion fallback
@@ -88,6 +104,7 @@ These rails are deliberately simulated; no real bank, MFS, or card network is co
 - Integer poisha amounts; no floating-point money arithmetic
 - Atomic Convex mutations for balance and ledger writes
 - Indexed idempotency keys for transfer and rail retry safety
+- Indexed idempotency keys for requests and scheduled transfers
 - Explicit request-state transitions
 - Authentication checked inside backend functions
 - Organization membership and role checks inside backend functions
@@ -104,13 +121,17 @@ These rails are deliberately simulated; no real bank, MFS, or card network is co
 | Email/password auth | ✓ | ✓ | ✓ |
 | First-time onboarding | ✓ | ✓ | ✓ |
 | Send by handle | ✓ | ✓ | ✓ |
-| Request lifecycle | ✓ | — | ✓ |
+| Request lifecycle | ✓ | ✓ | ✓ |
 | QR generate/scan | ✓ | ✓ | ✓ |
 | Receipts | ✓ | ✓ | ✓ |
 | Statements | ✓ | ✓ | ✓ |
 | PDF/print export | Print | PDF | — |
-| Organization wallets | — | ✓ | ✓ |
-| Simulated MFS/bank/card rails | — | ✓ | ✓ |
+| Organization wallets | ✓ | ✓ | ✓ |
+| Simulated MFS/bank/card rails | ✓ | ✓ | ✓ |
+| Notification inbox | ✓ | ✓ | ✓ |
+| Favorites | In progress | In progress | ✓ |
+| Scheduled transfers | In progress | In progress | ✓ |
+| Category budgets | In progress | In progress | ✓ |
 | Biometric payment confirmation | — | ✓ | — |
 | Push notifications | ✓ | ✓ | ✓ |
 | Installable app | PWA | Native | — |

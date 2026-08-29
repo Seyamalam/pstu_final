@@ -298,6 +298,8 @@ export const getDeliveryPayload = internalQuery({
         v.literal("transfer"),
         v.literal("request"),
       ),
+      eventKey: v.string(),
+      referenceId: v.string(),
       endpoints: v.array(
         v.object({
           id: v.id("notificationEndpoints"),
@@ -328,6 +330,8 @@ export const getDeliveryPayload = internalQuery({
       .take(25);
     return {
       kind: notification.kind,
+      eventKey: notification.eventKey,
+      referenceId: notification.referenceId,
       endpoints: endpoints
         .filter((endpoint) => endpoint.revokedAt === undefined)
         .map((endpoint) => ({

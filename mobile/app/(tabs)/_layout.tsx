@@ -1,8 +1,13 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { useQuery } from 'convex/react';
 import { useCSSVariable } from 'uniwind';
+
+import { api } from '@/lib/convex-api';
 
 export default function TabLayout() {
   const primary = useCSSVariable('--color-primary') as string | undefined;
+  const notifications = useQuery(api.notifications.list, { limit: 30 });
+  const unread = notifications?.filter((notification) => notification.readAt === null).length ?? 0;
   return (
     <NativeTabs tintColor={primary} minimizeBehavior="onScrollDown">
       <NativeTabs.Trigger name="home">
@@ -19,7 +24,8 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="inbox">
         <NativeTabs.Trigger.Icon sf={{ default: 'bell', selected: 'bell.fill' }} md="notifications" />
-        <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Notifications</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Badge hidden={unread === 0}>{unread > 99 ? '99+' : `${unread}`}</NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Icon sf="gearshape" md="settings" />

@@ -22,7 +22,7 @@ export default function InboxScreen() {
   const markAllRead = useMutation(api.notifications.markAllRead);
 
   if (notifications === undefined || incoming === undefined || outgoing === undefined) {
-    return <LoadingState label="Loading inbox" />;
+    return <LoadingState label="Loading notifications" />;
   }
   const unread = notifications.filter((item) => item.readAt === null).length;
 
@@ -35,7 +35,7 @@ export default function InboxScreen() {
 
   return (
     <Page
-      title="Inbox"
+      title="Notifications"
       safeTop
       action={unread ? (
         <Button size="sm" variant="ghost" onPress={() => void markAllRead({})}>Mark all read</Button>
@@ -85,7 +85,7 @@ export default function InboxScreen() {
       ) : null}
 
       <View className="gap-2">
-        <Text size="lg" weight="semibold">Updates</Text>
+        <Text size="lg" weight="semibold">Alerts</Text>
         {notifications.length ? (
           <Card className="overflow-hidden">
             {notifications.map((notification, index) => {

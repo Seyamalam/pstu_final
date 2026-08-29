@@ -163,7 +163,7 @@ export default function SettingsScreen() {
         <View className="h-px bg-border" />
         <Item>
           <Item.Content>
-            <Item.Title>Payment alerts</Item.Title>
+            <Item.Title>Push notifications</Item.Title>
             <Item.Description>{alertsMessage ?? (alerts ? 'On' : 'Off')}</Item.Description>
           </Item.Content>
           <Item.Actions>
@@ -171,7 +171,7 @@ export default function SettingsScreen() {
               value={alerts}
               disabled={alertsBusy}
               onValueChange={toggleAlerts}
-              accessibilityLabel="Payment alerts"
+              accessibilityLabel="Push notifications"
             />
           </Item.Actions>
         </Item>

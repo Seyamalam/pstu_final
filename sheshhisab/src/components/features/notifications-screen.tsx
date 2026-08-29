@@ -94,8 +94,8 @@ export function NotificationsScreen() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <PageHeading
-        eyebrow="Alerts"
-        title="Wallet updates"
+        eyebrow="Wallet activity"
+        title="Notifications"
         action={
           unread.length > 0 ? (
             <Button

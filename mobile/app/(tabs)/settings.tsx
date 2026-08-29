@@ -1,5 +1,7 @@
+import { useMutation } from 'convex/react';
+import * as Device from 'expo-device';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { router } from 'expo-router';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Button } from 'panelui-native/components/button';
@@ -15,15 +17,63 @@ import {
   getBiometricPaymentsEnabled,
   setBiometricPaymentsEnabled,
 } from '@/lib/biometrics';
+import { api, type Id } from '@/lib/convex-api';
+import {
+  getNotificationEndpointId,
+  registerNativeNotifications,
+  setNotificationEndpointId,
+} from '@/lib/notifications';
 
 export default function SettingsScreen() {
   const { mode, toggleMode } = useThemeMode();
   const [biometrics, setBiometrics] = useState(false);
   const [biometricError, setBiometricError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState(false);
+  const [alertsBusy, setAlertsBusy] = useState(false);
+  const [alertsMessage, setAlertsMessage] = useState<string | null>(null);
+  const registerEndpoint = useMutation(api.notifications.registerEndpoint);
+  const unregisterEndpoint = useMutation(api.notifications.unregisterEndpoint);
 
   useEffect(() => {
     getBiometricPaymentsEnabled().then(setBiometrics);
+    getNotificationEndpointId().then((endpointId) => setAlerts(Boolean(endpointId)));
   }, []);
+
+  async function toggleAlerts(enabled: boolean) {
+    if (alertsBusy) return;
+    setAlertsBusy(true);
+    setAlertsMessage(null);
+    try {
+      if (enabled) {
+        const registration = await registerNativeNotifications();
+        if (registration.status !== 'granted') {
+          setAlertsMessage(registration.message);
+          return;
+        }
+        const endpoint = await registerEndpoint({
+          platform: Platform.OS,
+          endpoint: registration.token,
+          deviceLabel: Device.modelName ?? `${Platform.OS} device`,
+        });
+        await setNotificationEndpointId(endpoint.id);
+        setAlerts(true);
+        return;
+      }
+
+      const endpointId = await getNotificationEndpointId();
+      if (endpointId) {
+        await unregisterEndpoint({
+          endpointId: endpointId as Id<'notificationEndpoints'>,
+        });
+      }
+      await setNotificationEndpointId(null);
+      setAlerts(false);
+    } catch {
+      setAlertsMessage('Could not update payment alerts.');
+    } finally {
+      setAlertsBusy(false);
+    }
+  }
 
   async function toggleBiometrics(enabled: boolean) {
     setBiometricError(null);
@@ -56,6 +106,21 @@ export default function SettingsScreen() {
           </Item.Content>
           <Item.Actions>
             <Switch value={mode === 'dark'} onValueChange={toggleMode} accessibilityLabel="Dark mode" />
+          </Item.Actions>
+        </Item>
+        <View className="h-px bg-border" />
+        <Item>
+          <Item.Content>
+            <Item.Title>Payment alerts</Item.Title>
+            <Item.Description>{alertsMessage ?? (alerts ? 'On' : 'Off')}</Item.Description>
+          </Item.Content>
+          <Item.Actions>
+            <Switch
+              value={alerts}
+              disabled={alertsBusy}
+              onValueChange={toggleAlerts}
+              accessibilityLabel="Payment alerts"
+            />
           </Item.Actions>
         </Item>
         <View className="h-px bg-border" />

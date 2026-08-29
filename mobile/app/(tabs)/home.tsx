@@ -9,27 +9,65 @@ import { ActivityRow } from '@/components/activity-row';
 import { LoadingState } from '@/components/loading-state';
 import { MessageCard } from '@/components/message-card';
 import { Page } from '@/components/page';
+import { RailActivityRow } from '@/components/rail-activity-row';
+import { WalletSwitcher } from '@/components/wallet-switcher';
 import { api } from '@/lib/convex-api';
 import { formatMoney } from '@/lib/format';
+import { canManageMembers, organizationRoute, roleLabel } from '@/lib/wallet-routes';
 
 export default function HomeScreen() {
   const dashboard = useQuery(api.dashboard.get, {});
-  if (dashboard === undefined) return <LoadingState />;
+  const wallets = useQuery(api.wallets.list, {});
+  const railActivity = useQuery(
+    api.rails.list,
+    wallets ? { accountId: wallets.activeAccountId, limit: 3 } : 'skip',
+  );
+  if (dashboard === undefined || wallets === undefined) return <LoadingState />;
+  const active = wallets.contexts.find((wallet) => wallet.accountId === wallets.activeAccountId)
+    ?? wallets.contexts[0];
+  const canMoveMoney = active.role !== 'viewer';
 
   return (
     <Page title={dashboard.user.displayName}>
+      <WalletSwitcher wallets={wallets} />
+
       <Card className="overflow-hidden border-primary/20 bg-primary">
         <Card.Header>
           <Text size="sm" className="text-primary-foreground/80">Available</Text>
           <Text size="3xl" weight="bold" className="text-primary-foreground">
-            {formatMoney(dashboard.account.balancePoisha)}
+            {formatMoney(active.balancePoisha)}
           </Text>
-          <Text size="sm" className="text-primary-foreground/80">@{dashboard.user.handle}</Text>
+          <Text size="sm" className="text-primary-foreground/80">
+            {active.kind === 'personal' ? `@${dashboard.user.handle}` : roleLabel(active.role)}
+          </Text>
         </Card.Header>
       </Card>
 
       <View className="flex-row gap-3">
-        <Button fullWidth className="flex-1" onPress={() => router.push('/send')}>Send</Button>
+        <Button
+          fullWidth
+          className="flex-1"
+          disabled={!canMoveMoney}
+          onPress={() => router.push('/add-money')}
+        >
+          Add money
+        </Button>
+        <Button
+          fullWidth
+          variant="outline"
+          className="flex-1"
+          disabled={!canMoveMoney}
+          onPress={() => router.push('/withdraw')}
+        >
+          Withdraw
+        </Button>
+      </View>
+      <View className="flex-row gap-3">
+        {active.kind === 'personal' ? (
+          <Button fullWidth variant="outline" className="flex-1" onPress={() => router.push('/send')}>
+            Send
+          </Button>
+        ) : null}
         <Button
           fullWidth
           variant="outline"
@@ -38,9 +76,36 @@ export default function HomeScreen() {
         >
           Scan
         </Button>
+        {active.kind === 'organization' && canManageMembers(active.role) ? (
+          <Button
+            fullWidth
+            variant="outline"
+            className="flex-1"
+            onPress={() => router.push(organizationRoute(active.accountId))}
+          >
+            Members
+          </Button>
+        ) : null}
       </View>
 
-      <View className="gap-2">
+      {railActivity?.length ? (
+        <View className="gap-2">
+          <View className="flex-row items-center justify-between">
+            <Text size="lg" weight="semibold">Money in & out</Text>
+            <Button size="sm" variant="ghost" onPress={() => router.push('/(tabs)/activity')}>All</Button>
+          </View>
+          <Card className="overflow-hidden">
+            {railActivity.map((transaction, index) => (
+              <View key={transaction.id}>
+                {index ? <View className="h-px bg-border" /> : null}
+                <RailActivityRow transaction={transaction} />
+              </View>
+            ))}
+          </Card>
+        </View>
+      ) : null}
+
+      {active.kind === 'personal' ? <View className="gap-2">
         <View className="flex-row items-center justify-between">
           <Text size="lg" weight="semibold">Recent</Text>
           <Button size="sm" variant="ghost" onPress={() => router.push('/(tabs)/activity')}>All</Button>
@@ -63,7 +128,7 @@ export default function HomeScreen() {
         ) : (
           <MessageCard title="No activity yet" />
         )}
-      </View>
+      </View> : null}
     </Page>
   );
 }

@@ -2,9 +2,11 @@ import '../global.css';
 
 import { ConvexBetterAuthProvider, type AuthClient } from '@convex-dev/better-auth/react';
 import { useConvexAuth } from 'convex/react';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import * as Notifications from 'expo-notifications';
+import { DarkTheme, DefaultTheme, router, ThemeProvider, type Href } from 'expo-router';
 import Stack from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PanelUIProvider } from 'panelui-native/provider';
 import { useThemeMode } from 'panelui-native/theme';
@@ -12,6 +14,8 @@ import { Uniwind, useCSSVariable } from 'uniwind';
 
 import { authClient } from '@/lib/auth-client';
 import { convexClient } from '@/lib/convex-client';
+import { notificationRoute } from '@/lib/notification-route';
+import '@/lib/notifications';
 
 Uniwind.setTheme('grass');
 
@@ -39,6 +43,21 @@ function Navigation() {
     },
   };
 
+  useEffect(() => {
+    const open = (response: Notifications.NotificationResponse) => {
+      if (!isAuthenticated) return;
+      const data = response.notification.request.content.data;
+      router.push(notificationRoute(data) as Href);
+      Notifications.clearLastNotificationResponse();
+    };
+
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) open(response);
+    });
+    const subscription = Notifications.addNotificationResponseReceivedListener(open);
+    return () => subscription.remove();
+  }, [isAuthenticated]);
+
   return (
     <ThemeProvider value={theme}>
       <Stack
@@ -58,6 +77,10 @@ function Navigation() {
           <Stack.Screen name="onboarding" options={{ title: 'Your wallet' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
           <Stack.Screen name="send" options={{ title: 'Send' }} />
+          <Stack.Screen name="add-money" options={{ title: 'Add money' }} />
+          <Stack.Screen name="withdraw" options={{ title: 'Withdraw' }} />
+          <Stack.Screen name="create-organization" options={{ title: 'New organization' }} />
+          <Stack.Screen name="organization-members" options={{ title: 'Members' }} />
           <Stack.Screen name="receipt/[public-id]" options={{ title: 'Receipt' }} />
           <Stack.Screen name="statements" options={{ title: 'Statements' }} />
         </Stack.Protected>

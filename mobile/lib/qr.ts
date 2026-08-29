@@ -13,7 +13,7 @@ export type RequestCode = {
   version: 1;
   kind: 'request';
   handle: string;
-  amountPoisha: bigint;
+  amountPoisha: bigint | null;
   note: string | null;
   canonicalPayload: string;
   payeePayload: string;
@@ -116,6 +116,53 @@ function parseRequestUrl(url: URL, allowedHttpsOrigins: readonly string[]): Requ
   };
 }
 
+function parseWebPayIntent(url: URL, allowedHttpsOrigins: readonly string[]): RequestCode | null {
+  if (
+    url.protocol !== 'https:'
+    || !allowedHttpsOrigins.includes(url.origin)
+    || url.username
+    || url.password
+    || url.hash
+  ) return null;
+  const pathMatch = HTTPS_PAYEE_PATH_PATTERN.exec(url.pathname);
+  if (!pathMatch) return null;
+
+  const keys = [...url.searchParams.keys()];
+  if (
+    url.searchParams.get('v') !== '1'
+    || keys.some((key) => key !== 'v' && key !== 'a' && key !== 'n')
+    || new Set(keys).size !== keys.length
+  ) return null;
+
+  const amountValue = url.searchParams.get('a');
+  let amountPoisha: bigint | null = null;
+  if (amountValue !== null) {
+    if (!/^[1-9]\d{0,10}$/.test(amountValue)) return null;
+    amountPoisha = BigInt(amountValue);
+    if (amountPoisha > 10_000_000_000n) return null;
+  }
+  const noteValue = url.searchParams.get('n');
+  const note = noteValue ?? null;
+  if (
+    note !== null
+    && (note.length < 1
+      || note.length > 120
+      || note !== note.trim()
+      || [...note].some((character) => character.charCodeAt(0) <= 31 || character.charCodeAt(0) === 127))
+  ) return null;
+  if (amountPoisha === null && note === null) return null;
+
+  return {
+    version: 1,
+    kind: 'request',
+    handle: pathMatch[1],
+    amountPoisha,
+    note,
+    canonicalPayload: url.toString(),
+    payeePayload: result(pathMatch[1]).canonicalPayload,
+  };
+}
+
 export function buildRequestCode(input: {
   handle: string;
   amountPoisha: bigint;
@@ -164,7 +211,9 @@ export function parsePaymentCode(
   }
   if (raw.length > 512 || raw.trim() !== raw) return null;
   try {
-    return parseRequestUrl(new URL(raw), allowedHttpsOrigins);
+    const url = new URL(raw);
+    return parseWebPayIntent(url, allowedHttpsOrigins)
+      ?? parseRequestUrl(url, allowedHttpsOrigins);
   } catch {
     return null;
   }

@@ -68,6 +68,22 @@ describe('request payment codes', () => {
     )).toBeNull();
   });
 
+  it('accepts the compact web request format without trusting another origin', () => {
+    expect(parsePaymentCode(
+      'https://sheshhisab.example/pay/bob?v=1&a=125050&n=Club+dues',
+      origins,
+    )).toMatchObject({
+      kind: 'request',
+      handle: 'bob',
+      amountPoisha: 125050n,
+      note: 'Club dues',
+    });
+    expect(parsePaymentCode(
+      'https://evil.example/pay/bob?v=1&a=125050&n=Club+dues',
+      origins,
+    )).toBeNull();
+  });
+
   it.each([
     'sheshhisab://request/v1/alice?amount=0',
     'sheshhisab://request/v1/alice?amount=100&amount=100',

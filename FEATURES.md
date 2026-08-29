@@ -27,6 +27,7 @@ SheshHisab is a closed-loop BDT wallet with a responsive Next.js PWA and an Expo
 - Strict QR payload and allowed-origin validation
 - Scanned recipient handoff directly into the Send flow
 - Amount- and note-prefilled request QR codes in the native app
+- Cross-platform amount- and note-prefilled payment links on web
 
 ## Activity, receipts, and insights
 
@@ -69,6 +70,7 @@ These rails are available on both clients and are deliberately simulated; no rea
 - Category budgets with atomic spend tracking on categorized transfers
 - Bounded favorite-recipient lists
 - Organization membership audit events
+- Split bills with partial contributions, receipts, and guarded settlement
 
 ## Native app
 
@@ -80,6 +82,8 @@ These rails are available on both clients and are deliberately simulated; no rea
 - Native push-notification registration and notification deep links
 - Native notification inbox with unread and read-all states
 - Native request creation, request QR sharing, and request settlement
+- Favorite/recent recipients, scheduled transfers, budget progress, and split bills
+- Organization member removal and audit history
 - Light and dark themes
 - Shareable PDF documents
 - Two-step first-run onboarding
@@ -93,6 +97,7 @@ These rails are available on both clients and are deliberately simulated; no rea
 - Web notification inbox with unread states
 - Web personal/organization wallet switching and member management
 - Web simulated MFS, bank, and card rails
+- Password reset and email verification through Better Auth and the protected Brevo SMTP relay
 - Camera QR scanning where the browser supports `BarcodeDetector`
 - Light and dark themes
 - Native View Transition styling with reduced-motion fallback
@@ -129,9 +134,12 @@ These rails are available on both clients and are deliberately simulated; no rea
 | Organization wallets | ✓ | ✓ | ✓ |
 | Simulated MFS/bank/card rails | ✓ | ✓ | ✓ |
 | Notification inbox | ✓ | ✓ | ✓ |
-| Favorites | In progress | In progress | ✓ |
-| Scheduled transfers | In progress | In progress | ✓ |
-| Category budgets | In progress | In progress | ✓ |
+| Favorites | ✓ | ✓ | ✓ |
+| Scheduled transfers | ✓ | ✓ | ✓ |
+| Category budgets | ✓ | ✓ | ✓ |
+| Split bills | ✓ | ✓ | ✓ |
+| Organization audit/removal | ✓ | ✓ | ✓ |
+| Password recovery | ✓ | ✓ | Better Auth + Brevo |
 | Biometric payment confirmation | — | ✓ | — |
 | Push notifications | ✓ | ✓ | ✓ |
 | Installable app | PWA | Native | — |

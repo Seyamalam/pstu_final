@@ -12,6 +12,7 @@ flowchart LR
     A[Better Auth<br/>email + password]
     C[Convex<br/>queries · mutations · HTTP]
     D[(Convex database)]
+    E[Vercel auth-email relay<br/>Brevo SMTP]
     P[Web Push / Expo Push]
 
     U --> W
@@ -22,6 +23,8 @@ flowchart LR
     M <--> C
     A <--> C
     C <--> D
+    C -->|Bearer-authenticated payload| E
+    E -->|reset / verification email| U
     C --> P
     P --> W
     P --> M
@@ -122,6 +125,10 @@ erDiagram
     ACCOUNTS ||--o{ SCHEDULED_TRANSFERS : funds
     ACCOUNTS ||--o{ BUDGETS : controls
     ACCOUNTS ||--o{ ORGANIZATION_AUDIT_EVENTS : records
+    USERS ||--o{ SPLIT_BILLS : creates
+    SPLIT_BILLS ||--o{ SPLIT_PARTICIPANTS : assigns
+    SPLIT_BILLS ||--o{ SPLIT_CONTRIBUTIONS : collects
+    TRANSFERS ||--o| SPLIT_CONTRIBUTIONS : proves
 
     USERS {
       string tokenIdentifier
@@ -162,6 +169,16 @@ erDiagram
       int64 limitPoisha
       int64 spentPoisha
     }
+    SPLIT_BILLS {
+      int64 totalPoisha
+      string status
+      string idempotencyKey
+    }
+    SPLIT_PARTICIPANTS {
+      int64 sharePoisha
+      int64 contributedPoisha
+      string status
+    }
 ```
 
 ## Authorization model
@@ -194,6 +211,8 @@ Client-side disabled buttons improve usability, but the Convex function repeats 
 9. Scheduled execution re-checks wallet access and available funds immediately before transfer.
 10. Categorized spend updates its active budget in the same mutation as the ledger write.
 11. Organization membership changes append audit events that normal product operations never rewrite.
+12. A split contribution posts a normal transfer, receipt, contribution row, and participant progress atomically.
+13. A split settles only after every participant has paid their exact share.
 
 ## Read path and scaling
 
@@ -249,6 +268,8 @@ flowchart LR
 ```
 
 - Better Auth manages email/password sessions; secrets are not stored in application tables.
+- Better Auth owns reset and verification tokens. Convex sends a bounded payload to a private Vercel route using a shared bearer secret; that route delivers through Brevo SMTP over TLS.
+- SMTP credentials exist only in encrypted Vercel environments, while Convex stores only the relay URL and bearer secret.
 - Redirect targets and native notification routes are allowlisted.
 - Security headers deny framing, prevent MIME sniffing, constrain referrers, and limit browser permissions.
 - Push subscriptions are user-scoped and revocable.
@@ -261,11 +282,16 @@ flowchart LR
 flowchart TB
     GH[GitHub main]
     V[Vercel production<br/>Next.js + PWA]
+    ED[Vercel auth-email route<br/>Brevo SMTP]
+    CD[Convex dev<br/>stoic-akita-240]
     CX[Convex production<br/>lovely-dolphin-835]
     EAS[EAS / local native builds]
     AND[Android / iOS devices]
 
     GH --> V
+    V --> ED
+    CD --> ED
+    CX --> ED
     GH --> CX
     GH --> EAS
     V <--> CX
@@ -273,7 +299,7 @@ flowchart TB
     AND <--> CX
 ```
 
-The deployed web app is [sheshhisab.vercel.app](https://sheshhisab.vercel.app). Web and native environments point to the same production Convex deployment so a payment made on one client appears on the other in real time.
+The deployed web app is [sheshhisab.vercel.app](https://sheshhisab.vercel.app). Web and native environments point to the same production Convex deployment so a payment made on one client appears on the other in real time. Development and production Convex deployments use the same authenticated mail-relay contract, but keep their other deployment state separate.
 
 ## Testing strategy
 

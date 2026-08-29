@@ -17,7 +17,7 @@ Next.js client for the SheshHisab closed-loop BDT wallet.
 
 ## Features
 
-- Email/password account creation and sessions
+- Email/password account creation, sessions, password reset, and email verification
 - Live wallet balance and pending requests
 - Send and request flows with atomic mutations
 - QR generation and browser camera scanning
@@ -26,6 +26,7 @@ Next.js client for the SheshHisab closed-loop BDT wallet.
 - Responsive five-item mobile navigation
 - Installable PWA with an offline fallback and home-screen shortcuts
 - Browser notification controls with permission and feature checks
+- Personal/organization wallets, simulated Bangladesh rails, favorites, scheduling, budgets, and split bills
 - Light/dark themes, reduced motion, and generated brand artwork
 
 ## Architecture
@@ -84,9 +85,29 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY # optional until remote push delivery is connected
 ```text
 BETTER_AUTH_SECRET
 SITE_URL
+RAIL_REFERENCE_PEPPER
+PUSH_VAPID_SUBJECT        # optional until Web Push delivery is enabled
+PUSH_VAPID_PUBLIC_KEY     # optional until Web Push delivery is enabled
+PUSH_VAPID_PRIVATE_KEY    # optional until Web Push delivery is enabled
+EXPO_ACCESS_TOKEN         # optional; required for authenticated Expo Push delivery
+AUTH_EMAIL_RELAY_URL      # deployed HTTPS /api/internal/auth-email endpoint
+AUTH_EMAIL_RELAY_SECRET   # shared bearer secret, 32+ characters
 ```
 
-Never expose `BETTER_AUTH_SECRET` through a `NEXT_PUBLIC_*` variable or commit it.
+Set server-only values with `bunx convex env set NAME VALUE`. Never expose them through a `NEXT_PUBLIC_*` variable or commit them.
+
+The Vercel deployment owns the SMTP connection and requires these encrypted variables:
+
+```text
+AUTH_EMAIL_RELAY_SECRET
+BREVO_SMTP_HOST
+BREVO_SMTP_PORT
+BREVO_SMTP_USER
+BREVO_SMTP_PASSWORD
+AUTH_EMAIL_FROM           # verified Brevo sender
+```
+
+Reset and verification screens are always available. Better Auth creates the short-lived action token, Convex calls the bearer-protected relay, and the relay sends through Brevo using TLS. Existing sign-ins are not gated on verification.
 
 Setting a VAPID public key alone does not enable remote notifications. The
 authenticated subscription persistence and delivery functions must also be
@@ -134,4 +155,4 @@ tests/                           unit and Convex integration tests
 
 The Vercel project is linked to the repository and deploys `main` with `sheshhisab/` as its root directory. The production alias is `https://sheshhisab.vercel.app`.
 
-Before a demo, run the four checks above, confirm the production auth-session endpoint returns successfully, and rehearse send, request, QR, receipt, and statement flows with two normal accounts.
+Before a demo, run the four checks above, confirm the production auth-session endpoint returns successfully, and rehearse send, request, QR, receipt, statement, and password-recovery flows with two normal accounts.

@@ -59,6 +59,7 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
     const { account } = await requireActiveWalletOperator(ctx, user);
+    const updatedAt = Date.now();
     const category = normalizeBudgetCategory(args.category);
     assertAmount(args.limitPoisha);
     if (
@@ -66,6 +67,7 @@ export const upsert = mutation({
       !Number.isSafeInteger(args.periodEnd) ||
       args.periodStart < 0 ||
       args.periodEnd <= args.periodStart ||
+      args.periodEnd <= updatedAt ||
       args.periodEnd - args.periodStart > MAX_PERIOD_MS
     ) {
       fail("INVALID_BUDGET_PERIOD", "Choose a valid budget period.");
@@ -76,12 +78,13 @@ export const upsert = mutation({
         q.eq("accountId", account._id).eq("category", category),
       )
       .unique();
-    const updatedAt = Date.now();
     if (existing) {
       const changingPeriod =
         existing.periodStart !== args.periodStart ||
         existing.periodEnd !== args.periodEnd;
-      if (changingPeriod && updatedAt < existing.periodEnd) {
+      const existingPeriodActive =
+        updatedAt >= existing.periodStart && updatedAt < existing.periodEnd;
+      if (changingPeriod && existingPeriodActive) {
         fail(
           "BUDGET_PERIOD_ACTIVE",
           "The current budget period is still active.",

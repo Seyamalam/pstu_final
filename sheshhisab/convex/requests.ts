@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
 import { fail } from "./lib/errors";
@@ -20,6 +21,79 @@ import {
 } from "./lib/validators";
 import { requireActiveWalletOperator } from "./lib/wallets";
 
+async function createRequest(
+  ctx: MutationCtx,
+  args: {
+    payerHandle: string;
+    amountPoisha: bigint;
+    note?: string;
+    idempotencyKey?: string;
+  },
+) {
+  const requester = await requireCurrentUser(ctx);
+  assertAmount(args.amountPoisha);
+  const payerHandle = normalizeHandle(args.payerHandle);
+  const note = normalizeNote(args.note);
+  const payer = await ctx.db
+    .query("users")
+    .withIndex("by_handleNormalized", (q) =>
+      q.eq("handleNormalized", payerHandle),
+    )
+    .unique();
+  if (!payer) {
+    fail("PAYER_NOT_FOUND", "No wallet uses that handle.");
+  }
+  if (payer._id === requester._id) {
+    fail("SELF_REQUEST", "Choose another person as the payer.");
+  }
+  const creationIdempotencyKey = args.idempotencyKey
+    ? normalizeIdempotencyKey(args.idempotencyKey)
+    : undefined;
+  if (creationIdempotencyKey) {
+    const existing = await ctx.db
+      .query("moneyRequests")
+      .withIndex("by_requesterId_and_creationIdempotencyKey", (q) =>
+        q
+          .eq("requesterId", requester._id)
+          .eq("creationIdempotencyKey", creationIdempotencyKey),
+      )
+      .unique();
+    if (existing) {
+      const sameIntent =
+        existing.payerId === payer._id &&
+        existing.amountPoisha === args.amountPoisha &&
+        existing.note === note;
+      if (!sameIntent) {
+        fail("IDEMPOTENCY_CONFLICT", "Request key belongs to another request.");
+      }
+      return await requestItem(ctx, existing);
+    }
+  }
+  await limitRequestCreation(ctx, String(requester._id));
+  const createdAt = Date.now();
+  const requestId = await ctx.db.insert("moneyRequests", {
+    requesterId: requester._id,
+    payerId: payer._id,
+    amountPoisha: args.amountPoisha,
+    ...(creationIdempotencyKey ? { creationIdempotencyKey } : {}),
+    ...(note ? { note } : {}),
+    status: "pending",
+    createdAt,
+  });
+  await createInboxNotification(ctx, {
+    recipientUserId: payer._id,
+    kind: "request",
+    eventKey: "request.created",
+    referenceId: String(requestId),
+    createdAt,
+  });
+  const request = await ctx.db.get("moneyRequests", requestId);
+  if (!request) {
+    fail("REQUEST_NOT_FOUND", "Money request was not found.");
+  }
+  return await requestItem(ctx, request);
+}
+
 export const create = mutation({
   args: {
     payerHandle: v.string(),
@@ -28,73 +102,18 @@ export const create = mutation({
     idempotencyKey: v.optional(v.string()),
   },
   returns: requestItemValidator,
-  handler: async (ctx, args) => {
-    const requester = await requireCurrentUser(ctx);
-    assertAmount(args.amountPoisha);
-    const payerHandle = normalizeHandle(args.payerHandle);
-    const note = normalizeNote(args.note);
-    const payer = await ctx.db
-      .query("users")
-      .withIndex("by_handleNormalized", (q) =>
-        q.eq("handleNormalized", payerHandle),
-      )
-      .unique();
-    if (!payer) {
-      fail("PAYER_NOT_FOUND", "No wallet uses that handle.");
-    }
-    if (payer._id === requester._id) {
-      fail("SELF_REQUEST", "Choose another person as the payer.");
-    }
-    const creationIdempotencyKey = args.idempotencyKey
-      ? normalizeIdempotencyKey(args.idempotencyKey)
-      : undefined;
-    if (creationIdempotencyKey) {
-      const existing = await ctx.db
-        .query("moneyRequests")
-        .withIndex("by_requesterId_and_creationIdempotencyKey", (q) =>
-          q
-            .eq("requesterId", requester._id)
-            .eq("creationIdempotencyKey", creationIdempotencyKey),
-        )
-        .unique();
-      if (existing) {
-        const sameIntent =
-          existing.payerId === payer._id &&
-          existing.amountPoisha === args.amountPoisha &&
-          existing.note === note;
-        if (!sameIntent) {
-          fail(
-            "IDEMPOTENCY_CONFLICT",
-            "Request key belongs to another request.",
-          );
-        }
-        return await requestItem(ctx, existing);
-      }
-    }
-    await limitRequestCreation(ctx, String(requester._id));
-    const createdAt = Date.now();
-    const requestId = await ctx.db.insert("moneyRequests", {
-      requesterId: requester._id,
-      payerId: payer._id,
-      amountPoisha: args.amountPoisha,
-      ...(creationIdempotencyKey ? { creationIdempotencyKey } : {}),
-      ...(note ? { note } : {}),
-      status: "pending",
-      createdAt,
-    });
-    await createInboxNotification(ctx, {
-      recipientUserId: payer._id,
-      kind: "request",
-      eventKey: "request.created",
-      referenceId: String(requestId),
-      createdAt,
-    });
-    const request = await ctx.db.get("moneyRequests", requestId);
-    if (!request) {
-      fail("REQUEST_NOT_FOUND", "Money request was not found.");
-    }
-    return await requestItem(ctx, request);
+  handler: createRequest,
+});
+
+export const createV2 = mutation({
+  args: {
+    payerHandle: v.string(),
+    amountPoisha: v.int64(),
+    note: v.optional(v.string()),
+    idempotencyKey: v.string(),
   },
+  returns: requestItemValidator,
+  handler: createRequest,
 });
 
 export const get = query({
@@ -162,6 +181,7 @@ export const accept = mutation({
       note: request.note,
       idempotencyKey,
       requestId: request._id,
+      operationKind: "request",
     });
     await ctx.db.patch("moneyRequests", request._id, {
       status: "paid",

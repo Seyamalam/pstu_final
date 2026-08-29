@@ -16,6 +16,16 @@ import {
 import { receiptValidator } from "./lib/validators";
 import { requireActiveWalletOperator } from "./lib/wallets";
 
+const RESERVED_IDEMPOTENCY_PREFIXES = ["request:", "schedule:", "split:"];
+
+function normalizeDirectIdempotencyKey(value: string) {
+  const key = normalizeIdempotencyKey(value);
+  if (RESERVED_IDEMPOTENCY_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+    fail("RESERVED_IDEMPOTENCY_KEY", "Choose another payment key.");
+  }
+  return key;
+}
+
 export const send = mutation({
   args: {
     recipientHandle: v.string(),
@@ -28,6 +38,7 @@ export const send = mutation({
   handler: async (ctx, args) => {
     const sender = await requireCurrentUser(ctx);
     const senderAccess = await requireActiveWalletOperator(ctx, sender);
+    const idempotencyKey = normalizeDirectIdempotencyKey(args.idempotencyKey);
     const recipientHandle = normalizeHandle(args.recipientHandle);
     const recipient = await ctx.db
       .query("users")
@@ -52,7 +63,7 @@ export const send = mutation({
       amountPoisha: args.amountPoisha,
       note: args.note,
       category: args.category,
-      idempotencyKey: args.idempotencyKey,
+      idempotencyKey,
     });
     if (existing) {
       return await receiptForTransfer(ctx, existing);
@@ -65,7 +76,7 @@ export const send = mutation({
       amountPoisha: args.amountPoisha,
       note: args.note,
       category: args.category,
-      idempotencyKey: args.idempotencyKey,
+      idempotencyKey,
     });
   },
 });
@@ -75,11 +86,14 @@ export const getByIdempotencyKey = query({
   returns: v.union(receiptValidator, v.null()),
   handler: async (ctx, args) => {
     const sender = await requireCurrentUser(ctx);
-    const idempotencyKey = normalizeIdempotencyKey(args.idempotencyKey);
+    const idempotencyKey = normalizeDirectIdempotencyKey(args.idempotencyKey);
     const transfer = await ctx.db
       .query("transfers")
-      .withIndex("by_senderId_and_idempotencyKey", (q) =>
-        q.eq("senderId", sender._id).eq("idempotencyKey", idempotencyKey),
+      .withIndex("by_senderId_and_operationKind_and_idempotencyKey", (q) =>
+        q
+          .eq("senderId", sender._id)
+          .eq("operationKind", undefined)
+          .eq("idempotencyKey", idempotencyKey),
       )
       .unique();
     return transfer ? await receiptForTransfer(ctx, transfer) : null;

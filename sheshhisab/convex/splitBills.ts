@@ -14,6 +14,7 @@ import { limitFeatureCreation, limitTransfer } from "./lib/rateLimits";
 import { commitTransfer, receiptForTransfer } from "./lib/transfers";
 import { receiptValidator } from "./lib/validators";
 import {
+  getActiveWalletAccess,
   getMembership,
   isOrganization,
   requireActiveWalletOperator,
@@ -121,18 +122,22 @@ async function requireBillAccess(
   bill: Doc<"splitBills">,
   userId: Doc<"users">["_id"],
 ) {
-  if (bill.creatorUserId === userId) return;
-  const participant = await ctx.db
-    .query("splitParticipants")
-    .withIndex("by_billId_and_userId", (q) =>
-      q.eq("billId", bill._id).eq("userId", userId),
-    )
-    .unique();
+  const [participant, account] = await Promise.all([
+    ctx.db
+      .query("splitParticipants")
+      .withIndex("by_billId_and_userId", (q) =>
+        q.eq("billId", bill._id).eq("userId", userId),
+      )
+      .unique(),
+    ctx.db.get("accounts", bill.receivingAccountId),
+  ]);
   if (participant) return;
-  const account = await ctx.db.get("accounts", bill.receivingAccountId);
-  if (account && isOrganization(account)) {
+  if (!account) fail("SPLIT_CORRUPT", "Receiving wallet could not be loaded.");
+  if (isOrganization(account)) {
     const membership = await getMembership(ctx, account._id, userId);
     if (membership) return;
+  } else if (bill.creatorUserId === userId) {
+    return;
   }
   fail("SPLIT_NOT_FOUND", "Split was not found.");
 }
@@ -219,8 +224,8 @@ export const create = mutation({
 
     const open = await ctx.db
       .query("splitBills")
-      .withIndex("by_creatorUserId_and_status_and_createdAt", (q) =>
-        q.eq("creatorUserId", creator._id).eq("status", "open"),
+      .withIndex("by_receivingAccountId_and_status_and_createdAt", (q) =>
+        q.eq("receivingAccountId", account._id).eq("status", "open"),
       )
       .take(MAX_OPEN_BILLS);
     if (open.length >= MAX_OPEN_BILLS)
@@ -285,19 +290,20 @@ export const list = query({
       fail("INVALID_LIMIT", "Limit must be between 1 and 50.");
     }
     if (args.role === "owner") {
+      const { account } = await getActiveWalletAccess(ctx, viewer);
       const status = args.status;
       const bills = status
         ? await ctx.db
             .query("splitBills")
-            .withIndex("by_creatorUserId_and_status_and_createdAt", (q) =>
-              q.eq("creatorUserId", viewer._id).eq("status", status),
+            .withIndex("by_receivingAccountId_and_status_and_createdAt", (q) =>
+              q.eq("receivingAccountId", account._id).eq("status", status),
             )
             .order("desc")
             .take(limit)
         : await ctx.db
             .query("splitBills")
-            .withIndex("by_creatorUserId_and_createdAt", (q) =>
-              q.eq("creatorUserId", viewer._id),
+            .withIndex("by_receivingAccountId_and_createdAt", (q) =>
+              q.eq("receivingAccountId", account._id),
             )
             .order("desc")
             .take(limit);
@@ -415,6 +421,7 @@ export const contribute = mutation({
       note: bill.title,
       category: "split",
       idempotencyKey,
+      operationKind: "split",
     });
     const createdAt = receipt.createdAt;
     const contributedPoisha = participant.contributedPoisha + args.amountPoisha;
@@ -461,15 +468,21 @@ export const settle = mutation({
     const actor = await requireCurrentUser(ctx);
     const bill = await ctx.db.get("splitBills", args.billId);
     if (!bill) fail("SPLIT_NOT_FOUND", "Split was not found.");
-    let authorized = bill.creatorUserId === actor._id;
-    if (!authorized) {
-      const membership = await getMembership(
-        ctx,
-        bill.receivingAccountId,
-        actor._id,
-      );
-      authorized = membership?.role === "owner" || membership?.role === "admin";
-    }
+    const account = await ctx.db.get("accounts", bill.receivingAccountId);
+    if (!account)
+      fail("SPLIT_CORRUPT", "Receiving wallet could not be loaded.");
+    const membership = isOrganization(account)
+      ? await getMembership(ctx, account._id, actor._id)
+      : null;
+    const authorized = isOrganization(account)
+      ? membership?.role === "owner" ||
+        membership?.role === "admin" ||
+        Boolean(
+          bill.creatorUserId === actor._id &&
+            membership &&
+            membership.role !== "viewer",
+        )
+      : bill.creatorUserId === actor._id && account.userId === actor._id;
     if (!authorized) fail("SPLIT_NOT_FOUND", "Split was not found.");
     if (bill.status === "settled") return await billSummary(ctx, bill);
     const pending = await ctx.db

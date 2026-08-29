@@ -13,6 +13,8 @@ import { createInboxNotification } from "./notifications";
 
 type ReadCtx = QueryCtx | MutationCtx;
 
+export type TransferOperationKind = "request" | "split" | "schedule";
+
 type CommitTransferArgs = {
   sender: Doc<"users">;
   senderAccount?: Doc<"accounts">;
@@ -23,6 +25,7 @@ type CommitTransferArgs = {
   category?: string;
   idempotencyKey: string;
   requestId?: Id<"moneyRequests">;
+  operationKind?: TransferOperationKind;
 };
 
 export async function findIdempotentTransfer(
@@ -36,8 +39,11 @@ export async function findIdempotentTransfer(
   const idempotencyKey = normalizeIdempotencyKey(input.idempotencyKey);
   const existing = await ctx.db
     .query("transfers")
-    .withIndex("by_senderId_and_idempotencyKey", (q) =>
-      q.eq("senderId", input.sender._id).eq("idempotencyKey", idempotencyKey),
+    .withIndex("by_senderId_and_operationKind_and_idempotencyKey", (q) =>
+      q
+        .eq("senderId", input.sender._id)
+        .eq("operationKind", input.operationKind)
+        .eq("idempotencyKey", idempotencyKey),
     )
     .unique();
   if (!existing) {
@@ -61,7 +67,8 @@ export async function findIdempotentTransfer(
     existing.amountPoisha === input.amountPoisha &&
     existing.note === note &&
     existing.category === category &&
-    existing.requestId === input.requestId;
+    existing.requestId === input.requestId &&
+    existing.operationKind === input.operationKind;
   if (!sameIntent) {
     fail(
       "IDEMPOTENCY_CONFLICT",
@@ -165,6 +172,9 @@ export async function commitTransfer(
     input.senderAccount ?? getAccountForUser(ctx, input.sender._id),
     input.recipientAccount ?? getAccountForUser(ctx, input.recipient._id),
   ]);
+  if (senderAccount._id === recipientAccount._id) {
+    fail("SAME_ACCOUNT", "Source and recipient wallets must differ.");
+  }
   const createdAt = Date.now();
   const { senderBalanceAfterPoisha, recipientBalanceAfterPoisha } =
     calculateTransferBalances(
@@ -183,6 +193,7 @@ export async function commitTransfer(
     ...(note ? { note } : {}),
     ...(category ? { category } : {}),
     ...(input.requestId ? { requestId: input.requestId } : {}),
+    ...(input.operationKind ? { operationKind: input.operationKind } : {}),
     createdAt,
   });
   const publicId = String(transferId);

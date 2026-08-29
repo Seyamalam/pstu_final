@@ -172,11 +172,15 @@ export const registerEndpoint = mutation({
       .query("notificationEndpoints")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", normalized.endpoint))
       .unique();
-    if (existing && existing.userId !== user._id) {
+    if (
+      existing &&
+      existing.userId !== user._id &&
+      existing.revokedAt === undefined
+    ) {
       fail("ENDPOINT_IN_USE", "Push endpoint is already registered.");
     }
     const updatedAt = Date.now();
-    if (existing) {
+    if (existing && existing.userId === user._id) {
       await ctx.db.patch("notificationEndpoints", existing._id, {
         platform: normalized.platform,
         p256dh: normalized.p256dh,
@@ -194,9 +198,14 @@ export const registerEndpoint = mutation({
         updatedAt,
       };
     }
+    if (existing) {
+      await ctx.db.delete("notificationEndpoints", existing._id);
+    }
     const endpoints = await ctx.db
       .query("notificationEndpoints")
-      .withIndex("by_userId_and_createdAt", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId_and_revokedAt_and_createdAt", (q) =>
+        q.eq("userId", user._id).eq("revokedAt", undefined),
+      )
       .take(10);
     if (endpoints.length >= 10) {
       fail("ENDPOINT_LIMIT", "Device limit reached.");
@@ -231,13 +240,7 @@ export const unregisterEndpoint = mutation({
     if (!endpoint || endpoint.userId !== user._id) {
       fail("ENDPOINT_NOT_FOUND", "Push endpoint was not found.");
     }
-    if (!endpoint.revokedAt) {
-      const revokedAt = Date.now();
-      await ctx.db.patch("notificationEndpoints", endpoint._id, {
-        revokedAt,
-        updatedAt: revokedAt,
-      });
-    }
+    await ctx.db.delete("notificationEndpoints", endpoint._id);
     return null;
   },
 });
@@ -258,13 +261,7 @@ export const unregisterCurrentEndpoint = mutation({
     if (!endpoint || endpoint.userId !== user._id) {
       fail("ENDPOINT_NOT_FOUND", "Push endpoint was not found.");
     }
-    if (!endpoint.revokedAt) {
-      const revokedAt = Date.now();
-      await ctx.db.patch("notificationEndpoints", endpoint._id, {
-        revokedAt,
-        updatedAt: revokedAt,
-      });
-    }
+    await ctx.db.delete("notificationEndpoints", endpoint._id);
     return null;
   },
 });

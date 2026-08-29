@@ -66,6 +66,63 @@ export const toggle = mutation({
   },
 });
 
+export const setFavorite = mutation({
+  args: { recipientHandle: v.string(), favorite: v.boolean() },
+  returns: v.object({
+    favorite: v.boolean(),
+    recipient: favoriteValidator.fields.recipient,
+    createdAt: v.union(v.number(), v.null()),
+  }),
+  handler: async (ctx, args) => {
+    const owner = await requireCurrentUser(ctx);
+    const handle = normalizeHandle(args.recipientHandle);
+    const recipient = await ctx.db
+      .query("users")
+      .withIndex("by_handleNormalized", (q) => q.eq("handleNormalized", handle))
+      .unique();
+    if (!recipient || recipient._id === owner._id) {
+      fail("RECIPIENT_NOT_FOUND", "Recipient was not found.");
+    }
+    const existing = await ctx.db
+      .query("favoriteRecipients")
+      .withIndex("by_ownerUserId_and_recipientUserId", (q) =>
+        q.eq("ownerUserId", owner._id).eq("recipientUserId", recipient._id),
+      )
+      .unique();
+    if (!args.favorite) {
+      if (existing) await ctx.db.delete("favoriteRecipients", existing._id);
+      return {
+        favorite: false,
+        recipient: userSummary(recipient),
+        createdAt: null,
+      };
+    }
+    if (existing) {
+      return {
+        favorite: true,
+        recipient: userSummary(recipient),
+        createdAt: existing.createdAt,
+      };
+    }
+    const favorites = await ctx.db
+      .query("favoriteRecipients")
+      .withIndex("by_ownerUserId_and_createdAt", (q) =>
+        q.eq("ownerUserId", owner._id),
+      )
+      .take(MAX_FAVORITES);
+    if (favorites.length >= MAX_FAVORITES) {
+      fail("FAVORITE_LIMIT", "Favorite limit reached.");
+    }
+    const createdAt = Date.now();
+    await ctx.db.insert("favoriteRecipients", {
+      ownerUserId: owner._id,
+      recipientUserId: recipient._id,
+      createdAt,
+    });
+    return { favorite: true, recipient: userSummary(recipient), createdAt };
+  },
+});
+
 export const list = query({
   args: { limit: v.optional(v.number()) },
   returns: v.array(favoriteValidator),

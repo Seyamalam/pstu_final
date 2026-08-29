@@ -346,11 +346,8 @@ describe("notification endpoints", () => {
     await asAlice.mutation(api.notifications.unregisterCurrentEndpoint, {
       endpoint: "https://push.example.test/subscription/alice",
     });
-    expect(await asAlice.query(api.notifications.listEndpoints, {})).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: registered.id, enabled: false }),
-        expect.objectContaining({ id: android.id, enabled: true }),
-      ]),
-    );
+    expect(await asAlice.query(api.notifications.listEndpoints, {})).toEqual([
+      expect.objectContaining({ id: android.id, enabled: true }),
+    ]);
   });
 });

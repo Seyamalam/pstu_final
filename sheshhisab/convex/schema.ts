@@ -138,7 +138,12 @@ export default defineSchema({
     revokedAt: v.optional(v.number()),
   })
     .index("by_endpoint", ["endpoint"])
-    .index("by_userId_and_createdAt", ["userId", "createdAt"]),
+    .index("by_userId_and_createdAt", ["userId", "createdAt"])
+    .index("by_userId_and_revokedAt_and_createdAt", [
+      "userId",
+      "revokedAt",
+      "createdAt",
+    ]),
 
   transfers: defineTable({
     publicId: v.string(),
@@ -151,9 +156,17 @@ export default defineSchema({
     category: v.optional(v.string()),
     note: v.optional(v.string()),
     requestId: v.optional(v.id("moneyRequests")),
+    operationKind: v.optional(
+      v.union(v.literal("request"), v.literal("split"), v.literal("schedule")),
+    ),
     createdAt: v.number(),
   })
     .index("by_senderId_and_idempotencyKey", ["senderId", "idempotencyKey"])
+    .index("by_senderId_and_operationKind_and_idempotencyKey", [
+      "senderId",
+      "operationKind",
+      "idempotencyKey",
+    ])
     .index("by_publicId", ["publicId"])
     .index("by_senderId_and_createdAt", ["senderId", "createdAt"])
     .index("by_recipientId_and_createdAt", ["recipientId", "createdAt"]),
@@ -232,7 +245,16 @@ export default defineSchema({
       "status",
       "executeAt",
     ])
-    .index("by_creatorUserId_and_executeAt", ["creatorUserId", "executeAt"]),
+    .index("by_creatorUserId_and_executeAt", ["creatorUserId", "executeAt"])
+    .index("by_sourceAccountId_and_status_and_executeAt", [
+      "sourceAccountId",
+      "status",
+      "executeAt",
+    ])
+    .index("by_sourceAccountId_and_executeAt", [
+      "sourceAccountId",
+      "executeAt",
+    ]),
 
   splitBills: defineTable({
     creatorUserId: v.id("users"),
@@ -253,7 +275,16 @@ export default defineSchema({
       "status",
       "createdAt",
     ])
-    .index("by_creatorUserId_and_createdAt", ["creatorUserId", "createdAt"]),
+    .index("by_creatorUserId_and_createdAt", ["creatorUserId", "createdAt"])
+    .index("by_receivingAccountId_and_status_and_createdAt", [
+      "receivingAccountId",
+      "status",
+      "createdAt",
+    ])
+    .index("by_receivingAccountId_and_createdAt", [
+      "receivingAccountId",
+      "createdAt",
+    ]),
 
   splitParticipants: defineTable({
     billId: v.id("splitBills"),

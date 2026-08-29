@@ -164,8 +164,8 @@ export const create = mutation({
     }
     const pending = await ctx.db
       .query("scheduledTransfers")
-      .withIndex("by_creatorUserId_and_status_and_executeAt", (q) =>
-        q.eq("creatorUserId", creator._id).eq("status", "pending"),
+      .withIndex("by_sourceAccountId_and_status_and_executeAt", (q) =>
+        q.eq("sourceAccountId", account._id).eq("status", "pending"),
       )
       .take(MAX_PENDING_SCHEDULES);
     if (pending.length >= MAX_PENDING_SCHEDULES) {
@@ -209,6 +209,7 @@ export const list = query({
   returns: v.array(scheduleValidator),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
+    const { account } = await getActiveWalletAccess(ctx, user);
     const limit = args.limit ?? 30;
     if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) {
       fail("INVALID_LIMIT", "Limit must be between 1 and 50.");
@@ -217,15 +218,15 @@ export const list = query({
     const schedules = status
       ? await ctx.db
           .query("scheduledTransfers")
-          .withIndex("by_creatorUserId_and_status_and_executeAt", (q) =>
-            q.eq("creatorUserId", user._id).eq("status", status),
+          .withIndex("by_sourceAccountId_and_status_and_executeAt", (q) =>
+            q.eq("sourceAccountId", account._id).eq("status", status),
           )
           .order("desc")
           .take(limit)
       : await ctx.db
           .query("scheduledTransfers")
-          .withIndex("by_creatorUserId_and_executeAt", (q) =>
-            q.eq("creatorUserId", user._id),
+          .withIndex("by_sourceAccountId_and_executeAt", (q) =>
+            q.eq("sourceAccountId", account._id),
           )
           .order("desc")
           .take(limit);
@@ -245,15 +246,20 @@ export const cancel = mutation({
       args.scheduledTransferId,
     );
     if (!scheduled) fail("SCHEDULE_NOT_FOUND", "Schedule was not found.");
-    let authorized = scheduled.creatorUserId === actor._id;
-    if (!authorized) {
-      const membership = await getMembership(
-        ctx,
-        scheduled.sourceAccountId,
-        actor._id,
-      );
-      authorized = membership?.role === "owner" || membership?.role === "admin";
-    }
+    const account = await ctx.db.get("accounts", scheduled.sourceAccountId);
+    if (!account) fail("SCHEDULE_NOT_FOUND", "Schedule was not found.");
+    const membership = isOrganization(account)
+      ? await getMembership(ctx, account._id, actor._id)
+      : null;
+    const authorized = isOrganization(account)
+      ? membership?.role === "owner" ||
+        membership?.role === "admin" ||
+        Boolean(
+          scheduled.creatorUserId === actor._id &&
+            membership &&
+            membership.role !== "viewer",
+        )
+      : scheduled.creatorUserId === actor._id && account.userId === actor._id;
     if (!authorized) fail("SCHEDULE_NOT_FOUND", "Schedule was not found.");
     if (scheduled.status !== "pending") {
       fail(
@@ -295,9 +301,6 @@ export const performExecutionTransfer = internalMutation({
       fail("ACCOUNT_NOT_FOUND", "Scheduled transfer data is unavailable.");
     }
     const recipientAccount = await getAccountForUser(ctx, recipient._id);
-    if (sourceAccount._id === recipientAccount._id) {
-      fail("SAME_ACCOUNT", "Source and recipient wallets must differ.");
-    }
     const receipt = await commitTransfer(ctx, {
       sender: creator,
       senderAccount: sourceAccount,
@@ -307,6 +310,7 @@ export const performExecutionTransfer = internalMutation({
       note: scheduled.note,
       category: scheduled.category,
       idempotencyKey: `schedule:${String(scheduled._id)}`,
+      operationKind: "schedule",
     });
     return { transferId: receipt.transferId, createdAt: receipt.createdAt };
   },

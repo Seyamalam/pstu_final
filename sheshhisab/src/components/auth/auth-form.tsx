@@ -216,7 +216,7 @@ export function AuthForm() {
     <motion.section
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       aria-labelledby="auth-title"
       className="w-full max-w-md rounded-[1.75rem] border border-foreground/10 bg-card p-5 shadow-[0_1px_0_rgb(16_42_51/0.05),0_24px_70px_rgb(16_42_51/0.10)] sm:p-7"
     >

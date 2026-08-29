@@ -87,7 +87,13 @@ export function ScanScreen() {
       });
       streamRef.current = stream;
       const video = videoRef.current;
-      if (!video) return;
+      if (!video) {
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+        streamRef.current = null;
+        return;
+      }
       video.srcObject = stream;
       await video.play();
       setScanning(true);
@@ -95,15 +101,20 @@ export function ScanScreen() {
 
       const scanFrame = async () => {
         if (!videoRef.current || latchedRef.current) return;
-        const codes = await detector.detect(videoRef.current);
-        const handle =
-          codes[0] && origin ? parsePayLink(codes[0].rawValue, origin) : null;
-        if (handle) {
-          latchedRef.current = true;
-          openHandle(handle);
-          return;
+        try {
+          const codes = await detector.detect(videoRef.current);
+          const handle =
+            codes[0] && origin ? parsePayLink(codes[0].rawValue, origin) : null;
+          if (handle) {
+            latchedRef.current = true;
+            openHandle(handle);
+            return;
+          }
+          frameRef.current = requestAnimationFrame(() => void scanFrame());
+        } catch {
+          stopCamera();
+          setMessage("The camera scanner stopped. Try opening it again.");
         }
-        frameRef.current = requestAnimationFrame(() => void scanFrame());
       };
       frameRef.current = requestAnimationFrame(() => void scanFrame());
     } catch {

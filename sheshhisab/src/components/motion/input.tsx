@@ -1,12 +1,7 @@
 "use client";
 // beui.dev/components/motion/input
 
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useReducedMotion,
-} from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   forwardRef,
   type InputHTMLAttributes,
@@ -16,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { EASE_OUT_CSS } from "@/lib/ease";
 import { cn } from "@/lib/utils";
 
 export type InputClassNames = {
@@ -92,10 +88,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   // Shake the field when an error appears.
   useEffect(() => {
     if (!fieldRef.current || reduce || !hasError) return;
-    animate(
-      fieldRef.current,
-      { x: [0, -6, 6, -4, 4, -2, 0] },
-      { duration: 0.45 },
+    fieldRef.current.animate(
+      [
+        { transform: "translateX(0)" },
+        { transform: "translateX(-5px)" },
+        { transform: "translateX(5px)" },
+        { transform: "translateX(-3px)" },
+        { transform: "translateX(3px)" },
+        { transform: "translateX(0)" },
+      ],
+      { duration: 260, easing: EASE_OUT_CSS },
     );
   }, [hasError, reduce]);
 
@@ -194,7 +196,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
               strokeLinejoin="round"
               initial={reduce ? { pathLength: 1 } : { pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
             />
           </motion.svg>
         ) : rightSlot ? (
